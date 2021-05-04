@@ -4,6 +4,8 @@ import de.uos.informatik.ko.rcp.Instance;
 import de.uos.informatik.ko.rcp.Io;
 import de.uos.informatik.ko.rcp.Utils;
 
+import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
+
 import de.uos.informatik.ko.rcp.generators.PriorityRule.SmallestIndexRule;
 import de.uos.informatik.ko.rcp.generators.SerialScheduleGenerator;
 
@@ -11,49 +13,37 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
-
     public static void main(String[] args) {
-        //if (args.length != 1) {
-        //    System.err.println("Usage: solver <instance path>");
-        //    System.exit(1);
-        //}
+        if (args.length != 1) {
+            System.err.println("Usage: solver <instance path>");
+            System.exit(1);
+        }
 
-        var instance = Io.readInstance(Paths.get("/home/steffen/RBP/material (1)/material/instances/j30/J301_1.RCP"));
+        var instance = Io.readInstance(Paths.get(args[0]));
 
-        // Fix wrong (?) predecessor relations
-        fixInstance(instance);
+        final var essGenerator = new EarliestStartScheduleGenerator(instance);
 
-        var rule = new SmallestIndexRule();
-        final var schedule = SerialScheduleGenerator.generateSerialSchedule(instance, rule);
+        int[] order = new int[instance.n()];
+        for (int i = 0; i < instance.n(); ++i) {
+            order[i] = i + 1;
+        }
+
+        final var start = System.currentTimeMillis();
+        final var schedule = essGenerator.generateSchedule(order);
+        final var end = System.currentTimeMillis();
 
         System.out.println("Schedule:");
         for (int actIdx = 1; actIdx < instance.n() - 1; ++actIdx) {
             System.out.println(
                     "Activity " + actIdx + ": start time = " + schedule[actIdx]
-                            + ", processing time = " + instance.processingTime[actIdx]);
+                    + ", processing time = " + instance.processingTime[actIdx]);
         }
 
         System.out.println("Makespan: " + schedule[instance.n() - 1]);
 
         final boolean admissible = Utils.checkAdmissibility(instance, schedule);
         System.out.println("Admissible? " + admissible);
-    }
 
-    /**
-     * Fix successor relation. Relation of the form i -> (n + 2) are turned into
-     * i -> (n + 1). (This assumes that the non-dummy activities are i = 1, ..., n.)
-     */
-    private static void fixInstance(Instance instance) {
-        final int n = instance.n();
-
-        for (int actIdx = 0; actIdx < instance.n(); ++actIdx) {
-            int[] successors = instance.successors[actIdx];
-
-            for (int succIdx = 0; succIdx < successors.length; ++succIdx) {
-                int succ = successors[succIdx];
-                if (succ == n)
-                    successors[succIdx] = n - 1;
-            }
-        }
+        System.out.println("Took " + (end - start) + " milliseconds.");
     }
 }
