@@ -3,7 +3,7 @@
 
 - Clone the repo:
 ```bash
-https://github.com/leon-richardt/rcpsp-solver.git
+git clone https://github.com/leon-richardt/rcpsp-solver.git
 ```
 
 - In the cloned directory, run
