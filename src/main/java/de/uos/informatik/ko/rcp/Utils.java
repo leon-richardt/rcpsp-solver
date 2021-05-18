@@ -14,13 +14,13 @@ public class Utils {
     public static HashMap<Integer, HashSet<Integer>> buildPredecessorMap(Instance instance) {
         var predMap = new HashMap<Integer, HashSet<Integer>>();
 
-        for (int actIdx = 0; actIdx < instance.n(); ++actIdx) {
+        for (int actIdx = 1; actIdx <= instance.n(); ++actIdx) {
             predMap.put(actIdx, new HashSet<Integer>());
         }
 
         for (int actIdx = 0; actIdx < instance.n(); ++actIdx) {
             for (Integer succ : instance.successors[actIdx]) {
-                predMap.get(succ).add(actIdx);
+                predMap.get(succ).add(actIdx+1);
             }
         }
 
@@ -79,4 +79,6 @@ public class Utils {
 
         return true;
     }
+
+
 }
