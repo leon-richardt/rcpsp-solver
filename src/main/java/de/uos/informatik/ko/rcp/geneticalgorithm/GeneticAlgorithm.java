@@ -1,4 +1,4 @@
-package de.uos.informatik.ko.rcp.geneticAlgo;
+package de.uos.informatik.ko.rcp.geneticalgorithm;
 
 import de.uos.informatik.ko.rcp.Instance;
 
@@ -7,7 +7,7 @@ import java.util.Random;
 /**
  * @author Manedikte
  */
-public class GA {
+public class GeneticAlgorithm {
 
     public static int[] geneticAlgorithm(Instance instance, Random random) {
 

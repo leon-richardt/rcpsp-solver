@@ -1,4 +1,4 @@
-package de.uos.informatik.ko.rcp.geneticAlgo;
+package de.uos.informatik.ko.rcp.geneticalgorithm;
 
 import de.uos.informatik.ko.rcp.Instance;
 import de.uos.informatik.ko.rcp.Io;
@@ -8,7 +8,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GATest {
+class GeneticAlgorithmTest {
 
     public static void main (String[] args){
         final String path = args[0];
