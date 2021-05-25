@@ -62,7 +62,7 @@ class GeneticAlgorithmTest {
          */
 
         //Reproduktion testen
-        reproduziert = GA.reproduktion(pop, instance,random,0.5);
+        reproduziert = GeneticAlgorithm.reproduktion(pop, instance,random,0.5);
         for (int i = 0; i < instance.n(); i++) {
             System.out.print(reproduziert[i] + " ");
         }
