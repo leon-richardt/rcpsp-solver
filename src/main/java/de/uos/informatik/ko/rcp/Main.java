@@ -5,45 +5,58 @@ import de.uos.informatik.ko.rcp.Io;
 import de.uos.informatik.ko.rcp.Utils;
 
 import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
-
-import de.uos.informatik.ko.rcp.generators.PriorityRule.SmallestIndexRule;
-import de.uos.informatik.ko.rcp.generators.SerialScheduleGenerator;
+import de.uos.informatik.ko.rcp.geneticalgorithm.GeneticAlgorithm;
+import de.uos.informatik.ko.rcp.geneticalgorithm.GeneratePop;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Random;
 
 public class Main {
-    public static void main(String[] args) {
+
+    public static void main(String[] args){
         if (args.length != 1) {
-            System.err.println("Usage: solver <instance path>");
-            System.exit(1);
+            System.out.println("Wrong usage");
+            return;
         }
 
-        var instance = Io.readInstance(Paths.get(args[0]));
+        final String path = args[0];
 
-        final var essGenerator = new EarliestStartScheduleGenerator(instance);
+        final Instance instance = Io.readInstance(Paths.get(path));
 
-        int[] order = new int[instance.n()];
-        for (int i = 0; i < instance.n(); ++i) {
-            order[i] = i + 1;
+        var essGen = new EarliestStartScheduleGenerator(instance);
+
+        for (int i = 0; i < instance.r(); i++) {
+            System.out.printf("res %d has %d available units\n", i, instance.resources[i]);
         }
 
-        final var start = System.currentTimeMillis();
-        final var schedule = essGenerator.generateSchedule(order);
-        final var end = System.currentTimeMillis();
+        //TODO richtigen Random vom Nutzer nutzen
+        Random random = new Random(1);
 
-        System.out.println("Schedule:");
-        for (int actIdx = 1; actIdx < instance.n() - 1; ++actIdx) {
-            System.out.println(
-                    "Activity " + actIdx + ": start time = " + schedule[actIdx]
-                    + ", processing time = " + instance.processingTime[actIdx]);
+        int[] solution = new int[instance.n()];
+
+        System.out.println();
+
+        int[] badOrder = {1, 4, 30, 31, 8, 20, 9, 3, 26, 17, 2, 12, 7, 5, 14, 11, 29, 15, 13, 18, 10, 6, 23, 19, 28, 27, 22, 25, 24, 16, 21, 32};
+        solution = GeneticAlgorithm.geneticAlgorithm(instance, random);
+        // solution = essGen.generateSchedule(badOrder);
+
+        System.out.println("Makespan: " + solution[solution.length-1]);
+        System.out.print("Order: ");
+        for (int actIdx : badOrder) {
+            System.out.print(actIdx + ", ");
+        }
+        System.out.println();
+
+        Io.writeSolution(solution, Paths.get("solGA.txt"));
+
+        System.out.println("Solution:");
+        for (int i = 0; i < solution.length; ++i) {
+            System.out.println("Activity " + (i + 1) + ": " + solution[i]);
         }
 
-        System.out.println("Makespan: " + schedule[instance.n() - 1]);
-
-        final boolean admissible = Utils.checkAdmissibility(instance, schedule);
+        final boolean admissible = Utils.checkAdmissibility(instance, solution);
         System.out.println("Admissible? " + admissible);
-
-        System.out.println("Took " + (end - start) + " milliseconds.");
     }
+
 }
