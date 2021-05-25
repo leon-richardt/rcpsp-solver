@@ -38,12 +38,18 @@ public class Main {
         System.out.println();
 
         solution = GeneticAlgorithm.geneticAlgorithm(instance, random);
-        
+
         System.out.println("Makespan: " + solution[solution.length-1]);
 
         Io.writeSolution(solution, Paths.get("solGA.txt"));
 
-        System.out.println("ok");
+        System.out.println("Solution:");
+        for (int i = 0; i < solution.length; ++i) {
+            System.out.println("Activity " + (i + 1) + ": " + solution[i]);
+        }
+
+        final boolean admissible = Utils.checkAdmissibility(instance, solution);
+        System.out.println("Admissible? " + admissible);
     }
 
 }
