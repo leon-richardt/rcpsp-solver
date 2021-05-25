@@ -2,6 +2,8 @@ package de.uos.informatik.ko.rcp.geneticalgorithm;
 
 import de.uos.informatik.ko.rcp.Instance;
 
+import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
+
 import java.util.Random;
 
 /**
@@ -17,6 +19,7 @@ public class GeneticAlgorithm {
         int popsize = instance.n()*2;
         //optimaler Schedule
         int[] optimum = new int[instance.n()];
+        optimum[optimum.length - 1] = Integer.MAX_VALUE;
 
         // In der Population gespeichert sind Reihenfolgen (in der zweiten Dimension)
         int[][] pop = new int[popsize][instance.n()];
@@ -34,15 +37,26 @@ public class GeneticAlgorithm {
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
 
+        //TODO das Optimum kann von Anfang an in der Population sein
 
-        while(counter < 100){
+
+        while(counter < 100000){
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
             zuwachs = reproduktion(pop, instance, random, mutationswkeit);
-
             // aktualisiere Optimum, falls nötig
             schedule = EssGen.generateSchedule(zuwachs);
+            //System.out.println("Geschedulet:");
+            for (int actIdx : schedule) {
+                //System.out.print(actIdx + ", ");
+            }
             dauer = schedule[schedule.length-1];
             if(dauer < optimum[optimum.length-1]){
+                //System.out.println("New Optimum:");
+                for (int actIdx : schedule) {
+                    //System.out.print(actIdx + ", ");
+                }
+                System.out.println();
+
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
 
@@ -113,7 +127,7 @@ public class GeneticAlgorithm {
      */
     public static int[] crossover(int[] mutter, int[] vater, Random random){
         int[] kind = new int[mutter.length];
-        int point = random.nextInt(mutter.length);
+        int point = random.nextInt((mutter.length)-2); //Der Fall in dem die Mutter komplett kopiert wird, bringt keinen Nutzen
         int grenze = point;
         boolean gefunden = false;
 
@@ -134,8 +148,8 @@ public class GeneticAlgorithm {
                 //wenn wir noch nicht am Ende des Kindes sind, inkrementieren wir point
                 if(point != kind.length - 1){
                     point++;
-                //wenn wir dann schon die letzte Stelle im Kind gefüllt haben,
-                //gehen wir aus der Schleife raus
+                    //wenn wir dann schon die letzte Stelle im Kind gefüllt haben,
+                    //gehen wir aus der Schleife raus
                 } else{
                     break;
                 }
@@ -158,15 +172,17 @@ public class GeneticAlgorithm {
         boolean links = true;
         int dummy = -1;
         // Wähle zufällig eine Position in der Reihenfolge
-        int pos = random.nextInt(kind.length);
-        System.out.println(pos);
+        int pos = random.nextInt(kind.length-1);
+        // System.out.println(pos);
         // Die Dummy-Aktivitäten müssen an ihren Stellen bleiben, wenn sie gewählt werden muss nichts überprüft werden
-        if(pos != 0 && pos != kind.length-1){
-            //Falls der rechte Nachbar von der Position die Aktivität an der Position als Vorgänger hat,
-            // dürfen sie nicht getauscht werden
-            if(pos == kind.length -2){
-                //nix
+        if(pos != 0 && pos < kind.length-1){
+            if(pos ==1){
+                links = false;
+            } else if(pos == kind.length-2){
+                rechts = false;
             } else {
+                //Falls der rechte Nachbar von der Position die Aktivität an der Position als Vorgänger hat,
+                // dürfen sie nicht getauscht werden
                 for (int i = 0; i < instance.successors[kind[pos + 1]].length; i++) {
                     if (instance.successors[kind[pos + 1]][i] == kind[pos]) {
                         rechts = false;
@@ -174,19 +190,20 @@ public class GeneticAlgorithm {
                     }
                 }
             }
+            if(rechts){
+                dummy = kind[pos];
+                kind[pos] = kind[pos+1];
+                kind[pos+1] = dummy;
+            }
             // Wenn rechts nicht möglich: Überprüfe links
-            if (!rechts){
+            else {
                 for (int i = 0; i < instance.successors[kind[pos]].length; i++) {
                     if(instance.successors[kind[pos]][i] == kind[pos-1]){
                         links = false;
                         break;
                     }
                 }
-            // Wenn rechts möglich: tausche die beiden Jobs im Kind
-            } else{
-                dummy = kind[pos];
-                kind[pos] = kind[pos+1];
-                kind[pos+1] = dummy;
+                // Wenn rechts möglich: tausche die beiden Jobs im Kind
             }
             //Falls rechts nicht möglich war, aber der linke Tausch möglich ist, führe ihn durch
             if(!rechts && links){
