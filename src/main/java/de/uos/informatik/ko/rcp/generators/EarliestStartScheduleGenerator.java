@@ -152,7 +152,7 @@ public class EarliestStartScheduleGenerator {
             final int demand = this.instance.demands[actIdx][resIdx];
             final int[] availibilityByTime = resourceAvailabilities[resIdx];
 
-            for (int tau = startTime + 1; tau <= startTime + procTime; ++tau) {
+            for (int tau = startTime; tau < startTime + procTime; ++tau) {
                 if (demand > availibilityByTime[tau]) {
                     return resIdx;
                 }
