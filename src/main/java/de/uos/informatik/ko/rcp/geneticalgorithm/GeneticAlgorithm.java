@@ -45,18 +45,8 @@ public class GeneticAlgorithm {
             zuwachs = reproduktion(pop, instance, random, mutationswkeit);
             // aktualisiere Optimum, falls nötig
             schedule = EssGen.generateSchedule(zuwachs);
-            //System.out.println("Geschedulet:");
-            for (int actIdx : schedule) {
-                //System.out.print(actIdx + ", ");
-            }
             dauer = schedule[schedule.length-1];
             if(dauer < optimum[optimum.length-1]){
-                //System.out.println("New Optimum:");
-                for (int actIdx : schedule) {
-                    //System.out.print(actIdx + ", ");
-                }
-                System.out.println();
-
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
 
@@ -173,7 +163,6 @@ public class GeneticAlgorithm {
         int dummy = -1;
         // Wähle zufällig eine Position in der Reihenfolge
         int pos = random.nextInt(kind.length-1);
-        // System.out.println(pos);
         // Die Dummy-Aktivitäten müssen an ihren Stellen bleiben, wenn sie gewählt werden muss nichts überprüft werden
         if(pos != 0 && pos < kind.length-1){
             if(pos ==1){
