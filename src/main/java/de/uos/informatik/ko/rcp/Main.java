@@ -38,9 +38,7 @@ public class Main {
         System.out.println();
 
         solution = GeneticAlgorithm.geneticAlgorithm(instance, random);
-
-        // solution = essGen.generateSchedule(reihenfolge);
-
+        
         System.out.println("Makespan: " + solution[solution.length-1]);
 
         Io.writeSolution(solution, Paths.get("solGA.txt"));
