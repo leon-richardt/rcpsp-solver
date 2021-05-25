@@ -1,6 +1,6 @@
 package de.uos.informatik.ko.rcp;
 
-import java.lang.reflect.Array;
+import java.lang.reflect.Array;  
 import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class Utils {
 
         for (int actIdx = 0; actIdx < instance.n(); ++actIdx) {
             for (Integer succ : instance.successors[actIdx]) {
-                predMap.get(succ).add(actIdx+1);
+                predMap.get(succ).add(actIdx + 1);
             }
         }
 
@@ -55,10 +55,12 @@ public class Utils {
         for (int actIdx = 0; actIdx < instance.n(); ++actIdx) {
             final int startTime = schedule[actIdx];
 
-            for (Integer predIdx : predMap.get(actIdx)) {
-                final int predEndTime = finishTime.get(predIdx);
-                if (startTime < predEndTime)
+            // Don't get confused by the index voodoo
+            for (Integer predIdx : predMap.get(actIdx + 1)) {
+                final int predEndTime = finishTime.get(predIdx - 1);
+                if (startTime < predEndTime) {
                     return false;
+                }
             }
         }
 
@@ -72,13 +74,12 @@ public class Utils {
                     cumDemand += instance.demands[activeIdx][resIdx];
                 }
 
-                if (cumDemand > instance.resources[resIdx])
+                if (cumDemand > instance.resources[resIdx]) {
                     return false;
+                }
             }
         }
 
         return true;
     }
-
-
 }
