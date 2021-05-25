@@ -20,6 +20,7 @@ public class GeneticAlgorithm {
         //optimaler Schedule
         int[] optimum = new int[instance.n()];
         optimum[optimum.length - 1] = Integer.MAX_VALUE;
+        int[] bestOrder = new int[instance.n()];
 
         // In der Population gespeichert sind Reihenfolgen (in der zweiten Dimension)
         int[][] pop = new int[popsize][instance.n()];
@@ -37,6 +38,15 @@ public class GeneticAlgorithm {
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
 
+        for (int i = 0; i < pop.length; ++i) {
+            var order = pop[i];
+            System.out.print("Initial order " + i + ": ");
+            for (int actIdx : order) {
+                System.out.print(actIdx + ", ");
+            }
+            System.out.println();
+        }
+
         //TODO das Optimum kann von Anfang an in der Population sein
 
 
@@ -48,6 +58,7 @@ public class GeneticAlgorithm {
             dauer = schedule[schedule.length-1];
             if(dauer < optimum[optimum.length-1]){
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
+                bestOrder = zuwachs;
             }
 
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
@@ -57,6 +68,11 @@ public class GeneticAlgorithm {
             counter++;
         }
 
+        System.out.print("Best order: ");
+        for (int actIdx : bestOrder) {
+            System.out.print(actIdx + ", ");
+        }
+        System.out.println();
         return optimum;
     }
 
