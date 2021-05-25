@@ -14,13 +14,22 @@ public class GeneratePop {
     public static HashSet<ArrayList<Integer>> generatePop(Instance instance, Integer pop_size,Random myGenerator){
         // all activities without predecessor are possible candidates
         HashSet<ArrayList<Integer>> results = new HashSet<ArrayList<Integer>>();
-        HashMap<Integer,HashSet<Integer>> mypredecessors;
+        // the predecessor Map
+        HashMap<Integer,HashSet<Integer>> mypredecessors = Utils.buildPredecessorMap(instance);
+        // the predecessor Map for the current iteration, changes are made to this map
+        // new for every iteration
+        HashMap<Integer,HashSet<Integer>> currentpredecessors;
         HashSet<Integer> candidates = new HashSet<Integer>();
         //scheduled activities
         ArrayList<Integer> scheduled = new ArrayList<Integer>();
-        for (int i=0; i< pop_size*5; i++) {
-            mypredecessors = Utils.buildPredecessorMap(instance);
-            for (Map.Entry<Integer, HashSet<Integer>> entry : mypredecessors.entrySet()) {
+        //variable witch defines how often the loop will be executed variable*pop_size
+        // five is just a first guess, not further experimentation
+        int numretries = 5;
+        //continues member generation until the pop-size*numretries iterarion is reached, or
+        //pop_size unique members are generated
+        for (int i=0; i< pop_size*numretries; i++) {
+            currentpredecessors = copyHashMap(mypredecessors);
+            for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
                 if (entry.getValue().isEmpty() && (!(scheduled.contains(entry.getKey())))) {
                     candidates.add(entry.getKey());
                 }
@@ -29,11 +38,11 @@ public class GeneratePop {
             scheduled.add(mycandidate);
             candidates.remove(mycandidate);
             //delete scheduled activity from predecessor list
-            for (Map.Entry<Integer, HashSet<Integer>> entry : mypredecessors.entrySet()) {
+            for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
                 entry.getValue().remove(mycandidate);
             }
             while (scheduled.size() < instance.n()) {
-                for (Map.Entry<Integer, HashSet<Integer>> entry : mypredecessors.entrySet()) {
+                for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
                     if (entry.getValue().isEmpty()&& (!(scheduled.contains(entry.getKey())))) {
                         candidates.add(entry.getKey());
                     }
@@ -42,14 +51,11 @@ public class GeneratePop {
                 scheduled.add(actcandidate);
                 candidates.remove(actcandidate);
                 // delete scheduled activity from predecessor list
-                for (Map.Entry<Integer, HashSet<Integer>> entry : mypredecessors.entrySet()) {
+                for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
                     entry.getValue().remove(actcandidate);
                 }
             }
-            ArrayList<Integer> resultsList = new ArrayList<Integer>();
-            for (Integer elem: scheduled){
-                resultsList.add(elem);
-            }
+            ArrayList<Integer> resultsList = new ArrayList<Integer>(scheduled);
             results.add(resultsList);
             scheduled.clear();
             candidates.clear();
@@ -61,19 +67,12 @@ public class GeneratePop {
     }
     // chooses randomly one Integer out of the Integer in the given Set, the Random Generator is given
     public static Integer chooseone( HashSet<Integer> candidates, Random myGenerator){
-        Integer returncanidate;
-        int mycandidate=0;
-        int item = myGenerator.nextInt(candidates.size());
-        int i = 0;
-        for(Integer elem: candidates) {
-            if (i == item) {
-                mycandidate = elem;
-                break;
-            }
-            i++;
+        int index = myGenerator.nextInt(candidates.size());
+        Iterator<Integer> iter = candidates.iterator();
+        for (int i = 0; i < index; i++) {
+            iter.next();
         }
-        returncanidate = mycandidate;
-        return returncanidate;
+        return iter.next();
     }
     //Returns a Hashset as an Array
     //the rows are the lists from left to right
@@ -96,6 +95,15 @@ public class GeneratePop {
 
     public static int GetColumnCount(HashSet<ArrayList<Integer>> mySet){
         return mySet.iterator().next().size();
+    }
+
+    public static HashMap<Integer, HashSet<Integer>> copyHashMap(HashMap<Integer, HashSet<Integer>> targetMap){
+        HashMap<Integer, HashSet<Integer>> newMap = new HashMap<Integer, HashSet<Integer>>();
+        // copy the keys und the values (here a HashMap)
+        for (Integer elem : targetMap.keySet()){
+            newMap.put(elem,new HashSet<Integer>(targetMap.get(elem)));
+        }
+        return newMap;
     }
 
 }
