@@ -32,9 +32,14 @@ public class Utils {
         final var finishTime = new HashMap<Integer, Integer>(instance.n());
 
         final var predMap = Utils.buildPredecessorMap(instance);
-        final int makespan = schedule[instance.n() - 1];
 
-        var activeByTime = (ArrayList<Integer>[]) Array.newInstance(ArrayList.class, makespan);
+        // Upper bound on the time required
+        int maxTime = 0;
+        for (int i = 0; i < instance.n(); ++i) {
+            maxTime += instance.processingTime[i];
+        }
+
+        var activeByTime = (ArrayList<Integer>[]) Array.newInstance(ArrayList.class, maxTime);
         for (int i = 0; i < activeByTime.length; ++i) {
             activeByTime[i] = new ArrayList<Integer>();
         }
@@ -42,7 +47,7 @@ public class Utils {
         // Build time-indexed version of schedule
         for (int actIdx = 0; actIdx < instance.n(); ++actIdx) {
             final int startTime = schedule[actIdx];
-            final int endTime = instance.processingTime[actIdx];
+            final int endTime = startTime + instance.processingTime[actIdx];
 
             for (int t = startTime; t < endTime; ++t) {
                 activeByTime[t].add(actIdx);
@@ -65,7 +70,7 @@ public class Utils {
         }
 
         // Check ressource constraints
-        for (int t = 0; t < makespan; ++t) {
+        for (int t = 0; t < maxTime; ++t) {
             ArrayList<Integer> actives = activeByTime[t];
 
             for (int resIdx = 0; resIdx < instance.r(); ++resIdx) {
