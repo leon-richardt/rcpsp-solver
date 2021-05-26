@@ -94,12 +94,13 @@ public class EarliestStartScheduleGenerator {
             }
 
             while (violatedResIdx != -1) {
-                final int constStartTime = startTime;
-
-                var possibleStartTimes = jumpTimes[violatedResIdx]
-                                             .stream()
-                                             .filter(jumpTime -> jumpTime > constStartTime)
-                                             .collect(Collectors.toList());
+                final var violatedResJumpTimes = jumpTimes[violatedResIdx];
+                var possibleStartTimes = new ArrayList<Integer>(violatedResJumpTimes.size());
+                for (int jumpTime : violatedResJumpTimes) {
+                    if (jumpTime > startTime) {
+                        possibleStartTimes.add(jumpTime);
+                    }
+                }
 
                 final int demand = curDemands[violatedResIdx];
                 final int[] availibilityByTime = availableRessources[violatedResIdx];
