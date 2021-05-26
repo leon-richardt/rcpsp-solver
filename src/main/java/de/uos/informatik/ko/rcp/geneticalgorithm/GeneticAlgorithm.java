@@ -11,11 +11,10 @@ import java.util.Random;
  */
 public class GeneticAlgorithm {
 
-    public static int[] geneticAlgorithm(Instance instance, Random random) {
+    public static int[] geneticAlgorithm(Instance instance, Random random, long timeLimit) {
 
         // TODO ------------------------------- richtige Abbruchbedingung einfügen--------------------------------------
 
-        int counter = 0;
         int popsize = instance.n()*2;
         //optimaler Schedule
         int[] optimum = new int[instance.n()];
@@ -39,22 +38,25 @@ public class GeneticAlgorithm {
 
         //TODO das Optimum kann von Anfang an in der Population sein
 
+        final long timeout = 1_000_000_000L * (timeLimit - 1);  // in nanoseconds + one second buffer
+        final long startTime = System.nanoTime();
 
-        while(counter < 100){
+        while (System.nanoTime() - startTime < timeout) {
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
             zuwachs = reproduktion(pop, instance, random, mutationswkeit);
+
             // aktualisiere Optimum, falls nötig
             schedule = EssGen.generateSchedule(zuwachs);
             dauer = schedule[schedule.length-1];
             if(dauer < optimum[optimum.length-1]){
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
+
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
             sterbeplatz = random.nextInt(popsize);
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
-
-            counter++;
         }
+
         return optimum;
     }
 
@@ -76,6 +78,7 @@ public class GeneticAlgorithm {
         int besterVater = Integer.MAX_VALUE;
         int dummyZeit = 0;
 
+        // TODO: Why is a new generator created here? Rebuilds the predecessor map on every run ...
         EarliestStartScheduleGenerator EssGen = new EarliestStartScheduleGenerator(instance);
         // suche unter (zwei mal) drei zufällig ausgewählten Reihenfolgen aus der Population die beste(n)
         for (int i = 0; i < 2; i++) {
