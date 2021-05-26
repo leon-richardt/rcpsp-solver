@@ -20,7 +20,6 @@ public class GeneticAlgorithm {
         //optimaler Schedule
         int[] optimum = new int[instance.n()];
         optimum[optimum.length - 1] = Integer.MAX_VALUE;
-        int[] bestOrder = new int[instance.n()];
 
         // In der Population gespeichert sind Reihenfolgen (in der zweiten Dimension)
         int[][] pop = new int[popsize][instance.n()];
@@ -38,19 +37,10 @@ public class GeneticAlgorithm {
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
 
-        for (int i = 0; i < pop.length; ++i) {
-            var order = pop[i];
-            System.out.print("Initial order " + i + ": ");
-            for (int actIdx : order) {
-                System.out.print(actIdx + ", ");
-            }
-            System.out.println();
-        }
-
         //TODO das Optimum kann von Anfang an in der Population sein
 
 
-        while(counter < 100000){
+        while(counter < 100){
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
             zuwachs = reproduktion(pop, instance, random, mutationswkeit);
             // aktualisiere Optimum, falls nötig
@@ -58,21 +48,13 @@ public class GeneticAlgorithm {
             dauer = schedule[schedule.length-1];
             if(dauer < optimum[optimum.length-1]){
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
-                bestOrder = zuwachs;
             }
-
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
             sterbeplatz = random.nextInt(popsize);
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
 
             counter++;
         }
-
-        System.out.print("Best order: ");
-        for (int actIdx : bestOrder) {
-            System.out.print(actIdx + ", ");
-        }
-        System.out.println();
         return optimum;
     }
 
@@ -173,50 +155,45 @@ public class GeneticAlgorithm {
      * @return Ein mutiertes Kind, falls die zufällig gewählte Position einen Tausch mit einem Nachbarn zulässt, d.h.
      *          die Reihenfolge dann vorrangsbeziehungsverträglich bleibt
      */
-    public static int[] mutation(int[] kind, Random random, Instance instance){
-        boolean rechts = true;
-        boolean links = true;
-        int dummy = -1;
-        // Wähle zufällig eine Position in der Reihenfolge
-        int pos = random.nextInt(kind.length-1);
-        // Die Dummy-Aktivitäten müssen an ihren Stellen bleiben, wenn sie gewählt werden muss nichts überprüft werden
-        if(pos != 0 && pos < kind.length-1){
-            if(pos ==1){
-                links = false;
-            } else if(pos == kind.length-2){
-                rechts = false;
-            } else {
-                //Falls der rechte Nachbar von der Position die Aktivität an der Position als Vorgänger hat,
-                // dürfen sie nicht getauscht werden
-                for (int i = 0; i < instance.successors[kind[pos + 1]].length; i++) {
-                    if (instance.successors[kind[pos + 1]][i] == kind[pos]) {
-                        rechts = false;
-                        break;
-                    }
+     public static int[] mutation(int[] kind, Random random, Instance instance){
+        int pos = random.nextInt(instance.n()-2)+1; //[1,Anzahl richtiger Aktivitäten]
+        boolean rechtsOk = true;
+        boolean linksOk = true;
+        int dummy;
+        if(pos != instance.n()-2){
+            //hat kind[pos] den Job bei kind[pos+1] als Nachfolger? Dann geht kein tausch nach rechts
+            for (int number : instance.successors[kind[pos]-1]) {
+                if (number == kind[pos + 1]) {
+                    rechtsOk = false;
+                    break;
                 }
             }
-            if(rechts){
-                dummy = kind[pos];
-                kind[pos] = kind[pos+1];
-                kind[pos+1] = dummy;
-            }
-            // Wenn rechts nicht möglich: Überprüfe links
-            else {
-                for (int i = 0; i < instance.successors[kind[pos]].length; i++) {
-                    if(instance.successors[kind[pos]][i] == kind[pos-1]){
-                        links = false;
-                        break;
-                    }
-                }
-                // Wenn rechts möglich: tausche die beiden Jobs im Kind
-            }
-            //Falls rechts nicht möglich war, aber der linke Tausch möglich ist, führe ihn durch
-            if(!rechts && links){
-                dummy = kind[pos];
-                kind[pos] = kind[pos-1];
-                kind[pos-1] = dummy;
+            // wenn die Aktivität aber nicht unter den nachfolgern gefunden wurde, können wir tauschen
+            if (rechtsOk) {
+                dummy = kind[pos + 1];
+                kind[pos + 1] = kind[pos];
+                kind[pos] = dummy;
+                return kind;
             }
         }
+        // Falls dieser Tausch nicht ging: gucke nach links
+        if(pos == 1){
+            return kind;
+        }
+        //mit dem selben Verfahren wie beim Tausch nach rechts
+        for (int number: instance.successors[kind[pos-1]-1]) {
+            if(number == kind[pos]){
+                linksOk = false;
+                break;
+            }
+        }
+        if(!linksOk){
+            return kind;
+        }
+        dummy = kind[pos];
+        kind[pos]=kind[pos-1];
+        kind[pos-1]=dummy;
+
         return kind;
     }
 }
