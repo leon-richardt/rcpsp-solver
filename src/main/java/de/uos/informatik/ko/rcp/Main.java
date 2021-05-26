@@ -31,32 +31,13 @@ public class Main {
         }
 
         //TODO richtigen Random vom Nutzer nutzen
-        Random random = new Random(1);
+        Random random = new Random();
 
-        int[] solution = new int[instance.n()];
-
-        System.out.println();
-
-        int[] badOrder = {1, 4, 30, 31, 8, 20, 9, 3, 26, 17, 2, 12, 7, 5, 14, 11, 29, 15, 13, 18, 10, 6, 23, 19, 28, 27, 22, 25, 24, 16, 21, 32};
-        solution = GeneticAlgorithm.geneticAlgorithm(instance, random);
-        // solution = essGen.generateSchedule(badOrder);
+        int[] solution = GeneticAlgorithm.geneticAlgorithm(instance, random);
 
         System.out.println("Makespan: " + solution[solution.length-1]);
-        System.out.print("Order: ");
-        for (int actIdx : badOrder) {
-            System.out.print(actIdx + ", ");
-        }
-        System.out.println();
 
         Io.writeSolution(solution, Paths.get("solGA.txt"));
-
-        System.out.println("Solution:");
-        for (int i = 0; i < solution.length; ++i) {
-            System.out.println("Activity " + (i + 1) + ": " + solution[i]);
-        }
-
-        final boolean admissible = Utils.checkAdmissibility(instance, solution);
-        System.out.println("Admissible? " + admissible);
     }
 
 }
