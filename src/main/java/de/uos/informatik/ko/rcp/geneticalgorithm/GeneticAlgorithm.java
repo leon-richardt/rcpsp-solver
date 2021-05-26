@@ -28,7 +28,7 @@ public class GeneticAlgorithm {
         int dauer;
         double mutationswkeit;
         int sterbeplatz = -1;
-        EarliestStartScheduleGenerator EssGen = new EarliestStartScheduleGenerator(instance);
+        EarliestStartScheduleGenerator essGen = new EarliestStartScheduleGenerator(instance);
 
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
         mutationswkeit = random.nextDouble();
@@ -43,10 +43,10 @@ public class GeneticAlgorithm {
 
         while (System.nanoTime() - startTime < timeout) {
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(pop, instance, random, mutationswkeit);
+            zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit);
 
             // aktualisiere Optimum, falls nötig
-            schedule = EssGen.generateSchedule(zuwachs);
+            schedule = essGen.generateSchedule(zuwachs);
             dauer = schedule[schedule.length-1];
             if(dauer < optimum[optimum.length-1]){
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
@@ -69,7 +69,8 @@ public class GeneticAlgorithm {
      * @param mutationswkeit nur mit einer gewissen Wkeit wird mutiert
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
-    public static int[] reproduktion(int[][] pop, Instance instance, Random random, double mutationswkeit){
+    public static int[] reproduktion(int[][] pop, Instance instance, Random random,
+                                     EarliestStartScheduleGenerator gen, double mutationswkeit) {
 
         int[] kind = new int[instance.n()];
         int[] mutter = new int[instance.n()];
@@ -78,21 +79,20 @@ public class GeneticAlgorithm {
         int besterVater = Integer.MAX_VALUE;
         int dummyZeit = 0;
 
-        // TODO: Why is a new generator created here? Rebuilds the predecessor map on every run ...
-        EarliestStartScheduleGenerator EssGen = new EarliestStartScheduleGenerator(instance);
         // suche unter (zwei mal) drei zufällig ausgewählten Reihenfolgen aus der Population die beste(n)
         for (int i = 0; i < 2; i++) {
             int mPos = random.nextInt(pop.length);
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            dummyZeit = EssGen.generateSchedule(pop[mPos])[instance.n() - 1];
+            dummyZeit = gen.generateSchedule(pop[mPos])[instance.n() - 1];
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
                 besteMutter = dummyZeit;
             }
+
             // finde Vater
-            dummyZeit = EssGen.generateSchedule(pop[vPos])[instance.n() - 1];
+            dummyZeit = gen.generateSchedule(pop[vPos])[instance.n() - 1];
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
                 besterVater = dummyZeit;
