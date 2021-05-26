@@ -10,34 +10,63 @@ import de.uos.informatik.ko.rcp.geneticalgorithm.GeneratePop;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.InvalidPathException;
 import java.util.Random;
 
 public class Main {
 
-    public static void main(String[] args){
-        if (args.length != 1) {
-            System.out.println("Wrong usage");
-            return;
+    public static void main(String[] arguments){
+        Args args = null;
+
+        try {
+            args = new Args(arguments);
+        } catch (IllegalArgumentException e) {
+            System.err.println("ERROR: " + e.getMessage());
+            System.err.println("Usage: java -jar rcp-solver-0.1.0.jar <instance-path> "
+                             + "<solution-path> <time-limit> <seed>");
+            System.exit(1);
         }
 
-        final String path = args[0];
+        final Instance instance = Io.readInstance(args.instancePath);
+        Random random = new Random(args.seed);
 
-        final Instance instance = Io.readInstance(Paths.get(path));
-
-        var essGen = new EarliestStartScheduleGenerator(instance);
-
-        for (int i = 0; i < instance.r(); i++) {
-            System.out.printf("res %d has %d available units\n", i, instance.resources[i]);
-        }
-
-        //TODO richtigen Random vom Nutzer nutzen
-        Random random = new Random();
-
-        int[] solution = GeneticAlgorithm.geneticAlgorithm(instance, random);
+        int[] solution = GeneticAlgorithm.geneticAlgorithm(instance, random, args.timeLimit);
 
         System.out.println("Makespan: " + solution[solution.length-1]);
 
-        Io.writeSolution(solution, Paths.get("solGA.txt"));
+        Io.writeSolution(solution, args.solutionPath);
     }
 
+    private static class Args {
+        public final Path instancePath;
+        public final Path solutionPath;
+        public final long timeLimit;
+        public final long seed;
+
+        public Args(String[] args) {
+            if (args.length != 4) {
+                throw new IllegalArgumentException("Must provide four arguments.");
+            }
+
+            try {
+                this.instancePath = Paths.get(args[0]);
+                this.solutionPath = Paths.get(args[1]);
+            } catch (InvalidPathException e) {
+                throw new IllegalArgumentException("Cannot convert \"" + e.getInput() + "\" to a "
+                                                 + "path");
+            }
+
+            try {
+                this.timeLimit = Long.parseLong(args[2]);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Cannot parse \"" + args[2] + "\" as a long");
+            }
+
+            try {
+                this.seed = Long.parseLong(args[3]);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Cannot parse \"" + args[3] + "\" as a long");
+            }
+        }
+    }
 }
