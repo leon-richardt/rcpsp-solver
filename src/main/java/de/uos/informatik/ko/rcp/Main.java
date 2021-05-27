@@ -32,7 +32,15 @@ public class Main {
 
         int[] solution = GeneticAlgorithm.geneticAlgorithm(instance, random, args.timeLimit);
 
-        System.out.println("Makespan: " + solution[solution.length-1]);
+        final int makespan = solution[solution.length - 1];
+
+        if (makespan == Integer.MAX_VALUE) {
+            System.err.println("Time limit too strict, could not even generate an initial "
+                             + "schedule. Not writing a solution.");
+            System.exit(2);
+        }
+
+        System.out.println("Makespan: " + makespan);
 
         Io.writeSolution(solution, args.solutionPath);
     }
