@@ -34,9 +34,12 @@ public class GeneticAlgorithm {
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
 
+        final long timeout = 1_000_000_000L * (timeLimit - 1);  // in nanoseconds + one second buffer
+        final long startTime = System.nanoTime();
+
         // Durch die 1. Generation gehen, die jeweiligen Makespans berechnen und daraus vorläufig
         // optimalen Schedule bestimmen
-        for (int i = 0; i < popsize; ++i) {
+        for (int i = 0; i < popsize && (System.nanoTime() - startTime < timeout); ++i) {
             aktuell = pop[i];
             schedule = essGen.generateSchedule(aktuell);
             dauer = schedule[schedule.length-1];
@@ -45,9 +48,6 @@ public class GeneticAlgorithm {
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
         }
-
-        final long timeout = 1_000_000_000L * (timeLimit - 1);  // in nanoseconds + one second buffer
-        final long startTime = System.nanoTime();
 
         while (System.nanoTime() - startTime < timeout) {
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
