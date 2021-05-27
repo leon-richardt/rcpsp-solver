@@ -12,9 +12,6 @@ import java.util.Random;
 public class GeneticAlgorithm {
 
     public static int[] geneticAlgorithm(Instance instance, Random random, long timeLimit) {
-
-        // TODO ------------------------------- richtige Abbruchbedingung einfügen--------------------------------------
-
         int popsize = instance.n()*2;
         //optimaler Schedule
         int[] optimum = new int[instance.n()];
@@ -25,6 +22,7 @@ public class GeneticAlgorithm {
 
         int[] zuwachs = new int[instance.n()];
         int[] schedule = new int[instance.n()];
+        int[] aktuell = new int[instance.n()];
         int dauer;
         double mutationswkeit;
         int sterbeplatz = -1;
@@ -36,7 +34,17 @@ public class GeneticAlgorithm {
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
 
-        //TODO das Optimum kann von Anfang an in der Population sein
+        // Durch die 1. Generation gehen, die jeweiligen Makespans berechnen und daraus vorläufig
+        // optimalen Schedule bestimmen
+        for (int i = 0; i < popsize; ++i) {
+            aktuell = pop[i];
+            schedule = essGen.generateSchedule(aktuell);
+            dauer = schedule[schedule.length-1];
+
+            if (dauer < optimum[optimum.length - 1]) {
+                System.arraycopy(schedule, 0, optimum, 0, optimum.length);
+            }
+        }
 
         final long timeout = 1_000_000_000L * (timeLimit - 1);  // in nanoseconds + one second buffer
         final long startTime = System.nanoTime();
