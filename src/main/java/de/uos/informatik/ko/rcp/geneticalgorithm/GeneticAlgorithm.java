@@ -24,12 +24,11 @@ public class GeneticAlgorithm {
         int[] schedule = new int[instance.n()];
         int[] aktuell = new int[instance.n()];
         int dauer;
-        double mutationswkeit;
         int sterbeplatz = -1;
         EarliestStartScheduleGenerator essGen = new EarliestStartScheduleGenerator(instance);
 
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
-        mutationswkeit = random.nextDouble();
+        final double mutationswkeit = 0.4;
 
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
