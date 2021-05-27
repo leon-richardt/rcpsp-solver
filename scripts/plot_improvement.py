@@ -26,7 +26,7 @@ def mean_makespan(bench_obj):
 
             makespans.append(val_at_x)
 
-        vals.append(np.mean(makespans))
+        vals.append(np.nanmean(makespans))
 
     return sample_points, vals
 
