@@ -53,7 +53,7 @@ if __name__ == "__main__":
         plt.step(x + [time_limit], y + [y[-1]], where="post", color="lightgrey")
 
     x, y = mean_makespan(bench_obj)
-    plt.plot(x, y, label="Mean makespan")
+    plt.plot(x, y, marker=".", label="Mean makespan")
 
     plt.xlim((0, time_limit))
     plt.ylim((y[-1] - 5, y[1] + 5))
