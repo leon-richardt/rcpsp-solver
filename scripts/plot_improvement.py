@@ -70,6 +70,8 @@ if __name__ == "__main__":
         plt.axhline(y=lower_bound, color='#c91800', linestyle='--', label="Lower bound")
         plt.ylim((lower_bound - 5, None))
 
+    plt.yticks(np.arange(int(plt.ylim()[0]), int(plt.ylim()[1])))
+
     plt.legend()
 
     plt.tight_layout()
