@@ -34,6 +34,11 @@ def mean_makespan(bench_obj):
 if __name__ == "__main__":
     file_name = sys.argv[1]
 
+    try:
+        lower_bound = int(sys.argv[2])
+    except:
+        lower_bound = None
+
     with open(file_name, "rb") as f:
         bench_obj = json.load(f)
 
@@ -60,4 +65,11 @@ if __name__ == "__main__":
     plt.xlabel("Time (s)")
     plt.ylabel("Best makespan")
     plt.title(f"Instance: {instance}")
+
+    if lower_bound:
+        plt.axhline(y=lower_bound, color='#c91800', linestyle='--', label="Lower bound")
+        plt.ylim((lower_bound - 5, None))
+
+    plt.legend()
+
     plt.show()
