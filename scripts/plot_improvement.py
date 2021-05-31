@@ -76,4 +76,4 @@ if __name__ == "__main__":
 
     plt.tight_layout()
 
-    plt.show()
+    plt.savefig(f"{instance}.png", dpi=2000, transparent=True)
