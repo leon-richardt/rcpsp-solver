@@ -66,12 +66,7 @@ public class GeneticAlgorithm {
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
             makespans[sterbeplatz] = dauer;
         }
-        for (int i = 0; i < popsize; i++) {
-            for (int j = 0; j < instance.n(); j++) {
-                System.out.print(pop[i][j] + " ");
-            }
-            System.out.println();
-        }
+        
         return optimum;
     }
 
