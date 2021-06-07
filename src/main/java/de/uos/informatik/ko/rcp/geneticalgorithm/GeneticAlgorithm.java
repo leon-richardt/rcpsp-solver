@@ -118,7 +118,7 @@ public class GeneticAlgorithm {
         }
 
         // ONS Mutter und Vater
-        System.arraycopy(crossover(mutter, vater, random), 0, kind, 0, instance.n());
+        System.arraycopy(tpcrossover(mutter, vater, random), 0, kind, 0, instance.n());
 
         // bestimme zufällig, ob gerade (in dieser Iteration) mutiert werden soll
         if(random.nextDouble() <= mutationswkeit){
@@ -127,39 +127,62 @@ public class GeneticAlgorithm {
         return kind;
     }
 
+    
     /**
-     * Führt den One-Point-Crossover durch
+     * Führt den Two-Point-Crossover durch
      * @param mutter Elternteil Nr.1
      * @param vater Elternteil Nr. 2
      * @param random Ein Zufallsgenerator
      * @return Eine Reihenfolge, die weiterhin vorrangsbeziehungsverträglich ist
      */
-    public static int[] crossover(int[] mutter, int[] vater, Random random){
+    public static int[] tpcrossover(int[] mutter, int[] vater, Random random){
         int[] kind = new int[mutter.length];
-        int point = random.nextInt((mutter.length)-2); //Der Fall in dem die Mutter komplett kopiert wird, bringt keinen Nutzen
+        int point;
+        int point2;
+        int grenze1 = random.nextInt((mutter.length));
+        int grenze2 = random.nextInt((mutter.length));
+        if(grenze1 <= grenze2){
+            point = grenze1;
+            point2 = grenze2;
+        } else{
+            point = grenze2;
+            point2 = grenze1;
+        }
         int grenze = point;
         boolean gefunden = false;
 
-        // fülle Kind bis zur gewünschten Position mit Einträgen der Mutter
+        // fülle Kind bis zur 1. gewünschten Position mit Einträgen der Mutter
         System.arraycopy(mutter, 0, kind, 0, point);
+        // fülle Kind ab der 2. gewünschten Position bis zum Ende mit Einträgen der Mutter
+        System.arraycopy(mutter, point2, kind, point2, mutter.length-point2);
+
         // gehe durch Vater und schaue in jedem Eintrag, ob er schon durch die Mutter im Kind enthalten ist
-        for (int k = 0; k < vater.length; k++) {
+        for (int i : vater) {
             for (int j = 0; j < grenze; j++) {
                 // wenn betrachteter Eintrag schon in Kind enthalten, muss dieser nicht weiter betrachtet werden
-                if (vater[k] == kind[j]) {
+                if (i == kind[j]) {
                     gefunden = true;
                     break;
                 }
             }
+            // Falls es schon im ersten Teil gefunden wurde, muss im zweiten nicht mehr danach gesucht werden
+            if (!gefunden) {
+                for (int j = point2; j < kind.length; j++) {
+                    // wenn betrachteter Eintrag schon in Kind enthalten, muss dieser nicht weiter betrachtet werden
+                    if (i == kind[j]) {
+                        gefunden = true;
+                        break;
+                    }
+                }
+            }
             // wenn betrachteter Eintrag noch nicht in Kind enthalten, füge diesen an passender Stelle zu Kind hinzu
             if (!gefunden) {
-                kind[point] = vater[k];
+                kind[point] = i;
                 //wenn wir noch nicht am Ende des Kindes sind, inkrementieren wir point
-                if(point != kind.length - 1){
+                if (point != kind.length - 1) {
                     point++;
-                    //wenn wir dann schon die letzte Stelle im Kind gefüllt haben,
-                    //gehen wir aus der Schleife raus
-                } else{
+                    //wenn wir dann schon die letzte Stelle im Kind gefüllt haben, gehen wir aus der Schleife raus
+                } else {
                     break;
                 }
             }
@@ -167,7 +190,9 @@ public class GeneticAlgorithm {
         }
         return kind;
     }
-
+    
+    
+    
     /**
      *
      * @param kind Eine Liste von Aktivitäten, vorrangbeziehungsverträglich
