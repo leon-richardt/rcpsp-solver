@@ -100,7 +100,7 @@ public class GeneticAlgorithm {
             fitness_pop[sterbeplatz] = dauer;
             timesWithoutUpdate++;
         }
-        System.out.println("Times without Update " + counterTimesWithoutImprovement);
+        System.err.println("Times without Update " + counterTimesWithoutImprovement);
         for (var entry : updateDeltas.entrySet()) {
             System.out.println(entry.getKey() + " " + entry.getValue());
         }
