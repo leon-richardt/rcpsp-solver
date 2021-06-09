@@ -11,11 +11,12 @@ public class GeneratePop {
 
     private GeneratePop() {}
     //change to Hashset of ArrayLists
-    public static HashSet<ArrayList<Integer>> generatePop(Instance instance, Integer pop_size,Random myGenerator){
+    public static HashSet<ArrayList<Integer>> generatePop(Instance instance, Integer pop_size,Random myGenerator,
+                                                          HashMap<Integer,HashSet<Integer>> predecessors){
         // all activities without predecessor are possible candidates
         HashSet<ArrayList<Integer>> results = new HashSet<ArrayList<Integer>>();
         // the predecessor Map
-        HashMap<Integer,HashSet<Integer>> mypredecessors = Utils.buildPredecessorMap(instance);
+        HashMap<Integer,HashSet<Integer>> mypredecessors = predecessors;
         // the predecessor Map for the current iteration, changes are made to this map
         // new for every iteration
         HashMap<Integer,HashSet<Integer>> currentpredecessors;
@@ -89,6 +90,54 @@ public class GeneratePop {
         }
         return myArray;
     }
+
+    /**
+     * Erzeugt einen neuen Group member
+     * @param instance Rcpsp Instanz
+     * @param myGenerator Randomgenerator
+     * @param predecessors Liste mit Vorgängern
+     * @return ein zufällig erzeugtes Mitglied der Population
+     */
+    public static int[] generateOne(Instance instance, Random myGenerator, HashMap<Integer,HashSet<Integer>> predecessors){
+        int[] newMember = new int[instance.n()];
+        ArrayList<Integer> scheduled = new ArrayList<Integer>();
+        HashSet<Integer> candidates = new HashSet<Integer>();
+        HashMap<Integer,HashSet<Integer>> currentpredecessors = copyHashMap(predecessors);
+        // scheduled ersetzen durch newMember plus int zaehler
+        //scheduled activities
+        for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
+            if (entry.getValue().isEmpty() && (!(scheduled.contains(entry.getKey())))) {
+                candidates.add(entry.getKey());
+            }
+        }
+        Integer mycandidate = chooseone(candidates, myGenerator);
+        scheduled.add(mycandidate);
+        candidates.remove(mycandidate);
+        //delete scheduled activity from predecessor list
+        for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
+            entry.getValue().remove(mycandidate);
+        }
+        while (scheduled.size() < instance.n()) {
+            for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
+                if (entry.getValue().isEmpty()&& (!(scheduled.contains(entry.getKey())))) {
+                    candidates.add(entry.getKey());
+                }
+            }
+            Integer actcandidate = chooseone(candidates, myGenerator);
+            scheduled.add(actcandidate);
+            candidates.remove(actcandidate);
+            // delete scheduled activity from predecessor list
+            for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
+                entry.getValue().remove(actcandidate);
+            }
+        }
+        // convert to array
+        for (int i=0; i< scheduled.size(); i++){
+            newMember[i]=scheduled.get(i);
+        }
+        return newMember;
+    }
+
     public static int GetRowCount(HashSet<ArrayList<Integer>> mySet){
         return mySet.size();
     }
@@ -105,5 +154,4 @@ public class GeneratePop {
         }
         return newMap;
     }
-
 }
