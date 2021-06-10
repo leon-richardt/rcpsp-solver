@@ -54,7 +54,7 @@ public class GeneticAlgorithm {
         
         while (System.nanoTime() - startTime < timeout) {
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit);
+            zuwachs = reproduktionVariante(makespans, pop, instance, random, essGen, mutationswkeit);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
@@ -118,7 +118,7 @@ public class GeneticAlgorithm {
         }
 
         // ONS Mutter und Vater
-        System.arraycopy(tpcrossover(mutter, vater, random), 0, kind, 0, instance.n());
+        System.arraycopy(crossover(mutter, vater, random), 0, kind, 0, instance.n());
 
         // bestimme zufällig, ob gerade (in dieser Iteration) mutiert werden soll
         if(random.nextDouble() <= mutationswkeit){
