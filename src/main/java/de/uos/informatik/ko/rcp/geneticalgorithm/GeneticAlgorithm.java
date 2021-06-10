@@ -52,7 +52,7 @@ public class GeneticAlgorithm {
         
         while (System.nanoTime() - startTime < timeout) {
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit);
+            zuwachs = reproduktionTurnier(pop, instance, random, essGen, mutationswkeit);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
@@ -75,7 +75,6 @@ public class GeneticAlgorithm {
         return optimum;
     }
 
-
     /**
      * Finde zwei Eltern-Reihenfolgen, die dann durch Crossover und ggf. Mutation eine Kind-Lösung bilden
      * @param pop Gesamtpopulation
@@ -84,8 +83,8 @@ public class GeneticAlgorithm {
      * @param mutationswkeit nur mit einer gewissen Wkeit wird mutiert
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
-    public static int[] reproduktionVariante(int[] makespans, int[][] pop, Instance instance, Random random,
-                                     EarliestStartScheduleGenerator gen, double mutationswkeit) {
+    public static int[] reproduktionTurnier(int[] makespans, int[][] pop, Instance instance, Random random,
+                                             EarliestStartScheduleGenerator gen, double mutationswkeit) {
 
         int[] kind = new int[instance.n()];
         int[] mutter = new int[instance.n()];
@@ -94,20 +93,21 @@ public class GeneticAlgorithm {
         int besterVater = Integer.MAX_VALUE;
         int dummyZeit = 0;
 
+        int anzahl = random.nextInt(makespans.length)+1;
         // suche unter (zwei mal) drei zufällig ausgewählten Reihenfolgen aus der Population die beste(n)
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < anzahl; i++) {
             int mPos = random.nextInt(pop.length);
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            dummyZeit = essGen.generateSchedule(mPos);
+            dummyZeit = makespans[mPos];
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
                 besteMutter = dummyZeit;
             }
 
             // finde Vater
-            dummyZeit = essGen.generateSchedule(vPos);
+            dummyZeit = makespans[vPos];
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
                 besterVater = dummyZeit;
@@ -115,7 +115,7 @@ public class GeneticAlgorithm {
         }
 
         // ONS Mutter und Vater
-        System.arraycopy(tpcrossover(mutter, vater, random), 0, kind, 0, instance.n());
+        System.arraycopy(crossover(mutter, vater, random), 0, kind, 0, instance.n());
 
         // bestimme zufällig, ob gerade (in dieser Iteration) mutiert werden soll
         if(random.nextDouble() <= mutationswkeit){
@@ -123,6 +123,9 @@ public class GeneticAlgorithm {
         }
         return kind;
     }
+    
+    
+    
     /**
      * Führt den One-Point-Crossover durch
      * @param mutter Elternteil Nr.1
