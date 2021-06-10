@@ -23,7 +23,6 @@ public class GeneticAlgorithm {
         int[] zuwachs = new int[instance.n()];
         int[] schedule = new int[instance.n()];
         int[] aktuell = new int[instance.n()];
-        int[] makespans = new int[popsize];
         int dauer;
         int sterbeplatz = -1;
         EarliestStartScheduleGenerator essGen = new EarliestStartScheduleGenerator(instance);
@@ -46,7 +45,6 @@ public class GeneticAlgorithm {
             aktuell = pop[i];
             schedule = essGen.generateSchedule(aktuell);
             dauer = schedule[schedule.length-1];
-            makespans[i] = dauer;
             if (dauer < optimum[optimum.length - 1]) {
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
@@ -68,7 +66,6 @@ public class GeneticAlgorithm {
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
             sterbeplatz = random.nextInt(popsize);
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
-            makespans[sterbeplatz] = dauer;
         }
 
         for (var entry : updateDeltas.entrySet()) {
@@ -103,14 +100,14 @@ public class GeneticAlgorithm {
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            dummyZeit = makespans[mPos];
+            dummyZeit = essGen.generateSchedule(mPos);
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
                 besteMutter = dummyZeit;
             }
 
             // finde Vater
-            dummyZeit = makespans[vPos];
+            dummyZeit = essGen.generateSchedule(vPos);
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
                 besterVater = dummyZeit;
