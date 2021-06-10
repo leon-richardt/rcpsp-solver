@@ -52,7 +52,7 @@ public class GeneticAlgorithm {
         
         while (System.nanoTime() - startTime < timeout) {
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktionTurnier(pop, instance, random, essGen, mutationswkeit);
+            zuwachs = reproduktionTurnier(popsize, pop, instance, random, essGen, mutationswkeit);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
@@ -83,7 +83,7 @@ public class GeneticAlgorithm {
      * @param mutationswkeit nur mit einer gewissen Wkeit wird mutiert
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
-    public static int[] reproduktionTurnier(int[] makespans, int[][] pop, Instance instance, Random random,
+    public static int[] reproduktionTurnier(int popsize, int[][] pop, Instance instance, Random random,
                                              EarliestStartScheduleGenerator gen, double mutationswkeit) {
 
         int[] kind = new int[instance.n()];
@@ -93,21 +93,21 @@ public class GeneticAlgorithm {
         int besterVater = Integer.MAX_VALUE;
         int dummyZeit = 0;
 
-        int anzahl = random.nextInt(makespans.length)+1;
+        int anzahl = random.nextInt(popsize.length)+1;
         // suche unter (zwei mal) drei zufällig ausgewählten Reihenfolgen aus der Population die beste(n)
         for (int i = 0; i < anzahl; i++) {
             int mPos = random.nextInt(pop.length);
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            dummyZeit = makespans[mPos];
+            dummyZeit = essGen.generateSchedule(mPos);
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
                 besteMutter = dummyZeit;
             }
 
             // finde Vater
-            dummyZeit = makespans[vPos];
+            dummyZeit = essGen.generateSchedule(vPos);
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
                 besterVater = dummyZeit;
