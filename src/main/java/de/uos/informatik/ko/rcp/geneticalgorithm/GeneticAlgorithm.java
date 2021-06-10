@@ -93,21 +93,21 @@ public class GeneticAlgorithm {
         int besterVater = Integer.MAX_VALUE;
         int dummyZeit = 0;
 
-        int anzahl = random.nextInt(popsize.length)+1;
+        int anzahl = random.nextInt(popsize)+1;
         // suche unter (zwei mal) drei zufällig ausgewählten Reihenfolgen aus der Population die beste(n)
         for (int i = 0; i < anzahl; i++) {
             int mPos = random.nextInt(pop.length);
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            dummyZeit = gen.generateSchedule(mPos)[mutter.length-1];
+            dummyZeit = gen.generateSchedule(pop[mPos])[mutter.length-1];
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
                 besteMutter = dummyZeit;
             }
 
             // finde Vater
-            dummyZeit = gen.generateSchedule(vPos)[vater.length-1];
+            dummyZeit = gen.generateSchedule(pop[vPos])[vater.length-1];
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
                 besterVater = dummyZeit;
@@ -115,7 +115,7 @@ public class GeneticAlgorithm {
         }
 
         // ONS Mutter und Vater
-        System.arraycopy(crossover(mutter, vater, random), 0, kind, 0, instance.n());
+        System.arraycopy(tpcrossover(mutter, vater, random), 0, kind, 0, instance.n());
 
         // bestimme zufällig, ob gerade (in dieser Iteration) mutiert werden soll
         if(random.nextDouble() <= mutationswkeit){
@@ -123,6 +123,7 @@ public class GeneticAlgorithm {
         }
         return kind;
     }
+
     
     
     
