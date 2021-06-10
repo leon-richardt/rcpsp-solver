@@ -100,14 +100,14 @@ public class GeneticAlgorithm {
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            dummyZeit = gen.generateSchedule(mPos);
+            dummyZeit = gen.generateSchedule(mPos)[mutter.length-1];
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
                 besteMutter = dummyZeit;
             }
 
             // finde Vater
-            dummyZeit = gen.generateSchedule(vPos);
+            dummyZeit = gen.generateSchedule(vPos)[vater.length-1];
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
                 besterVater = dummyZeit;
