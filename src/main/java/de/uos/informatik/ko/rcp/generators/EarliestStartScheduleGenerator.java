@@ -5,6 +5,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeSet;
 import java.util.stream.IntStream;
 import java.util.stream.Collectors;
 
@@ -47,10 +48,10 @@ public class EarliestStartScheduleGenerator {
         int[] startTimes = new int[this.instance.n()];
 
         // jumpTimes[resIdx] stores all time points where resIdx's availability changes
-        var jumpTimes = (ArrayList<Integer>[]) Array.newInstance(ArrayList.class,
-                                                                 this.instance.r());
+        var jumpTimes = (TreeSet<Integer>[]) Array.newInstance(TreeSet.class,
+                                                               this.instance.r());
         for (int resIdx = 0; resIdx < jumpTimes.length; ++resIdx) {
-            jumpTimes[resIdx] = new ArrayList<Integer>();
+            jumpTimes[resIdx] = new TreeSet<Integer>();
         }
 
         // Upper bound on the makespan (assuming resource capacities are ignored)
@@ -95,12 +96,7 @@ public class EarliestStartScheduleGenerator {
 
             while (violatedResIdx != -1) {
                 final var violatedResJumpTimes = jumpTimes[violatedResIdx];
-                var possibleStartTimes = new ArrayList<Integer>(violatedResJumpTimes.size());
-                for (int jumpTime : violatedResJumpTimes) {
-                    if (jumpTime > startTime) {
-                        possibleStartTimes.add(jumpTime);
-                    }
-                }
+                final var possibleStartTimes = violatedResJumpTimes.tailSet(startTime);
 
                 final int demand = curDemands[violatedResIdx];
                 final int[] availibilityByTime = availableRessources[violatedResIdx];
