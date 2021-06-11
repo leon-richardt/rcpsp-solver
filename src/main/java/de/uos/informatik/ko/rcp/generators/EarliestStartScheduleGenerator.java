@@ -130,8 +130,13 @@ public class EarliestStartScheduleGenerator {
 
             // Update resource profiles
             for (int resIdx = 0; resIdx < this.instance.r(); ++resIdx) {
-                var availibilityByTime = availableRessources[resIdx];
                 final var demand = curDemands[resIdx];
+
+                if (demand == 0) {
+                    continue;
+                }
+
+                var availibilityByTime = availableRessources[resIdx];
 
                 for (int tau = startTime; tau < startTime + curProcTime; ++tau) {
                     availibilityByTime[tau] = availibilityByTime[tau] - demand;
