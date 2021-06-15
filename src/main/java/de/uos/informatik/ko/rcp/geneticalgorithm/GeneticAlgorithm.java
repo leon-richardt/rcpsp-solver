@@ -1,10 +1,10 @@
 package de.uos.informatik.ko.rcp.geneticalgorithm;
 
 import de.uos.informatik.ko.rcp.Instance;
-
 import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
 
 import java.util.Random;
+import java.util.LinkedHashMap;
 
 /**
  * @author Manedikte
@@ -27,6 +27,9 @@ public class GeneticAlgorithm {
         int sterbeplatz = -1;
         EarliestStartScheduleGenerator essGen = new EarliestStartScheduleGenerator(instance);
 
+        // Only for debug purposes
+        var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
+
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
         final double mutationswkeit = 0.4;
 
@@ -44,6 +47,8 @@ public class GeneticAlgorithm {
             dauer = schedule[schedule.length-1];
 
             if (dauer < optimum[optimum.length - 1]) {
+                final long updateTime = System.nanoTime();
+                updateDeltas.put(updateTime - startTime, dauer);
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
         }
@@ -55,13 +60,19 @@ public class GeneticAlgorithm {
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
             dauer = schedule[schedule.length-1];
-            if(dauer < optimum[optimum.length-1]){
+            if (dauer < optimum[optimum.length-1]){
+                final long updateTime = System.nanoTime();
+                updateDeltas.put(updateTime - startTime, dauer);
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
 
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
             sterbeplatz = random.nextInt(popsize);
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
+        }
+
+        for (var entry : updateDeltas.entrySet()) {
+            System.out.println(entry.getKey() + " " + entry.getValue());
         }
 
         return optimum;
