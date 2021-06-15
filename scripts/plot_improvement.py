@@ -49,7 +49,7 @@ if __name__ == "__main__":
         seed = run["seed"]
         x = []
         y = []
-        iterations.append(run["iterations"][0]["iterations"])
+        iterations.append(run["iterations"])
 
         for pair in run["updates"]:
             x.append(pair["time_delta"] / 1_000_000_000) # in s
@@ -60,7 +60,8 @@ if __name__ == "__main__":
 
     x, y = mean_makespan(bench_obj)
     plt.plot(x, y, marker=".", label="Mean makespan")
-    print(iterations)
+    #print out the number of iterations if you want
+    #print(iterations)
     plt.xlim((0, time_limit))
     plt.ylim((y[-1] - 5, y[1] + 5))
     plt.xlabel("Time (s)")

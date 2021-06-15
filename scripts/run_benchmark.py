@@ -42,7 +42,6 @@ if __name__ == "__main__":
 
         run_obj = {"seed": i}
         run_obj["updates"] = []
-        run_obj["iterations"] = []
         # check for prefixes
         for line in update_lines:
             if re.match("time: ", line):
@@ -54,7 +53,7 @@ if __name__ == "__main__":
                 })
             if re.match("iterations: ", line):
                 newEntry = re.sub("iterations: ", "", line)
-                run_obj["iterations"].append({"iterations" : int(newEntry)})
+                run_obj["iterations"] = int(newEntry)
 
         result_obj["runs"].append(run_obj)
         print("done.")
