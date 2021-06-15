@@ -44,11 +44,12 @@ if __name__ == "__main__":
 
     instance = bench_obj["instance"]
     time_limit = bench_obj["time_limit"]
-
+    iterations = []
     for run in bench_obj["runs"]:
         seed = run["seed"]
         x = []
         y = []
+        iterations.append(run["iterations"][0]["iterations"])
 
         for pair in run["updates"]:
             x.append(pair["time_delta"] / 1_000_000_000) # in s
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 
     x, y = mean_makespan(bench_obj)
     plt.plot(x, y, marker=".", label="Mean makespan")
-
+    print(iterations)
     plt.xlim((0, time_limit))
     plt.ylim((y[-1] - 5, y[1] + 5))
     plt.xlabel("Time (s)")

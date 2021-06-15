@@ -62,10 +62,10 @@ class GeneticAlgorithmTest {
          */
 
         //Reproduktion testen
-        reproduziert = GeneticAlgorithm.reproduktion(pop, instance,random,0.5);
-        for (int i = 0; i < instance.n(); i++) {
-            System.out.print(reproduziert[i] + " ");
-        }
+        //reproduziert = GeneticAlgorithm.reproduktion(pop, instance,random,0.5);
+        //for (int i = 0; i < instance.n(); i++) {
+        //    System.out.print(reproduziert[i] + " ");
+        //}
 
         int[] copy = new int[instance.n()];
         System.out.println("ArrayCopy:");

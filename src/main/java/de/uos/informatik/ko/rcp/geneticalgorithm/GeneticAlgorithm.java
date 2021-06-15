@@ -19,7 +19,7 @@ public class GeneticAlgorithm {
 
         // In der Population gespeichert sind Reihenfolgen (in der zweiten Dimension)
         int[][] pop = new int[popsize][instance.n()];
-
+        int anzahl_iterationen =0;
         int[] zuwachs = new int[instance.n()];
         int[] schedule = new int[instance.n()];
         int[] aktuell = new int[instance.n()];
@@ -52,8 +52,10 @@ public class GeneticAlgorithm {
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
         }
+        anzahl_iterationen++;
 
         while (System.nanoTime() - startTime < timeout) {
+            anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
             zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit);
 
@@ -72,8 +74,9 @@ public class GeneticAlgorithm {
         }
 
         for (var entry : updateDeltas.entrySet()) {
-            System.out.println(entry.getKey() + " " + entry.getValue());
+            System.out.println("time: " +entry.getKey() + " " + entry.getValue());
         }
+        System.out.println("iterations: "+anzahl_iterationen);
 
         return optimum;
     }
