@@ -1,5 +1,6 @@
 package de.uos.informatik.ko.rcp.geneticalgorithm;
 
+import de.uos.informatik.ko.rcp.Config;
 import de.uos.informatik.ko.rcp.Instance;
 import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
 
@@ -73,10 +74,13 @@ public class GeneticAlgorithm {
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
         }
 
-        for (var entry : updateDeltas.entrySet()) {
-            System.out.println("time: " +entry.getKey() + " " + entry.getValue());
+        if (Config.instance().shouldLog) {
+            for (var entry : updateDeltas.entrySet()) {
+                System.out.println("time: " + entry.getKey() + " " + entry.getValue());
+            }
+
+            System.out.println("iterations: " + anzahl_iterationen);
         }
-        System.out.println("iterations: "+anzahl_iterationen);
 
         return optimum;
     }
