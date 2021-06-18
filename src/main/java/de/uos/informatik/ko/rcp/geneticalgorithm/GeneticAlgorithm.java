@@ -32,7 +32,8 @@ public class GeneticAlgorithm {
         var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
 
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
-        final double mutationswkeit = 0.4;
+        final double mutationswkeit = Config.instance().mutationProbability;
+        System.out.println("Mutationswkeit: " + mutationswkeit);
 
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
@@ -150,28 +151,29 @@ public class GeneticAlgorithm {
         // fülle Kind bis zur gewünschten Position mit Einträgen der Mutter
         System.arraycopy(mutter, 0, kind, 0, point);
         // gehe durch Vater und schaue in jedem Eintrag, ob er schon durch die Mutter im Kind enthalten ist
-        for (int k = 0; k < vater.length; k++) {
+        for (int i : vater) {
             for (int j = 0; j < grenze; j++) {
                 // wenn betrachteter Eintrag schon in Kind enthalten, muss dieser nicht weiter betrachtet werden
-                if (vater[k] == kind[j]) {
+                if (i == kind[j]) {
                     gefunden = true;
                     break;
                 }
             }
             // wenn betrachteter Eintrag noch nicht in Kind enthalten, füge diesen an passender Stelle zu Kind hinzu
             if (!gefunden) {
-                kind[point] = vater[k];
+                kind[point] = i;
                 //wenn wir noch nicht am Ende des Kindes sind, inkrementieren wir point
-                if(point != kind.length - 1){
+                if (point != kind.length - 1) {
                     point++;
                     //wenn wir dann schon die letzte Stelle im Kind gefüllt haben,
                     //gehen wir aus der Schleife raus
-                } else{
+                } else {
                     break;
                 }
             }
             gefunden = false;
         }
+        System.out.println("Jippie, One-Point!");
         return kind;
     }
 
