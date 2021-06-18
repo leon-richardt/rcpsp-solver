@@ -32,11 +32,6 @@ public class GeneticAlgorithm {
         // Only for debug purposes
         var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
 
-        boolean fixedTournamentSize = false;
-        String tournament = Config.instance().parentSelection.name();
-        if(tournament.equalsIgnoreCase(Config.ParentSelection.FIXED_SIZE.name())){
-            fixedTournamentSize = true;
-        }
         int[] makespans = new int[popsize]; // makespans ist mit 0en gefüllt, wenn wir es nicht benutzen, sonst wird es initialisiert
 
         boolean makeSpans = false;
@@ -73,7 +68,7 @@ public class GeneticAlgorithm {
         while (System.nanoTime() - startTime < timeout) {
             anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(popsize, pop, instance, random, essGen, mutationswkeit, fixedTournamentSize, makeSpans, makespans);
+            zuwachs = reproduktion(popsize, pop, instance, random, essGen, mutationswkeit, makeSpans, makespans);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
@@ -113,7 +108,7 @@ public class GeneticAlgorithm {
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
     public static int[] reproduktion(int popsize, int[][] pop, Instance instance, Random random,
-                                     EarliestStartScheduleGenerator gen, double mutationswkeit, boolean fixedTournamentSize, boolean makeSpans, int[] makespans) {
+                                     EarliestStartScheduleGenerator gen, double mutationswkeit, boolean makeSpans, int[] makespans) {
 
         int[] kind = new int[instance.n()];
         int[] mutter = new int[instance.n()];
