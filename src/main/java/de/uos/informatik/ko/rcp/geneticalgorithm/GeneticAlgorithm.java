@@ -18,6 +18,7 @@ public class GeneticAlgorithm {
         int[] optimum = new int[instance.n()];
         optimum[optimum.length - 1] = Integer.MAX_VALUE;
 
+
         // In der Population gespeichert sind Reihenfolgen (in der zweiten Dimension)
         int[][] pop = new int[popsize][instance.n()];
         int anzahl_iterationen =0;
@@ -30,6 +31,10 @@ public class GeneticAlgorithm {
 
         // Only for debug purposes
         var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
+
+        int[] makespans = new int[popsize]; // makespans ist mit 0en gefüllt, wenn wir es nicht benutzen, sonst wird es initialisiert
+
+        final boolean cacheMakespans = Config.instance().cacheMakespans;
 
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
         final double mutationswkeit = Config.instance().mutationProbability;
@@ -51,7 +56,9 @@ public class GeneticAlgorithm {
             aktuell = pop[i];
             schedule = essGen.generateSchedule(aktuell);
             dauer = schedule[schedule.length-1];
-
+            if (cacheMakespans) {
+                makespans[i] = dauer;
+            }
             if (dauer < optimum[optimum.length - 1]) {
                 final long updateTime = System.nanoTime();
                 updateDeltas.put(updateTime - startTime, dauer);
@@ -63,7 +70,7 @@ public class GeneticAlgorithm {
         while (System.nanoTime() - startTime < timeout) {
             anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit, onePointCrossover);
+            zuwachs = reproduktion(popsize, pop, instance, random, essGen, mutationswkeit, onePointCrossover, cacheMakespans, makespans);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
@@ -77,6 +84,9 @@ public class GeneticAlgorithm {
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
             sterbeplatz = random.nextInt(popsize);
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
+            if (cacheMakespans) {
+                makespans[sterbeplatz] = dauer;
+            }
         }
 
         if (Config.instance().shouldLog) {
@@ -99,9 +109,7 @@ public class GeneticAlgorithm {
      * @param mutationswkeit nur mit einer gewissen Wkeit wird mutiert
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
-    public static int[] reproduktion(int[][] pop, Instance instance, Random random,
-                                     EarliestStartScheduleGenerator gen, double mutationswkeit, boolean onePointCrossover) {
-
+    public static int[] reproduktion(int popsize, int[][] pop, Instance instance, Random random, EarliestStartScheduleGenerator gen, double mutationswkeit, boolean onePointCrossover, boolean cacheMakespans, int[] makespans) {
         int[] kind = new int[instance.n()];
         int[] mutter = new int[instance.n()];
         int[] vater = new int[instance.n()];
@@ -115,14 +123,24 @@ public class GeneticAlgorithm {
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            dummyZeit = gen.generateSchedule(pop[mPos])[instance.n() - 1];
+            if (!cacheMakespans) {
+                dummyZeit = gen.generateSchedule(pop[mPos])[instance.n() - 1];
+            } else{
+                dummyZeit = makespans[mPos];
+            }
+
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
                 besteMutter = dummyZeit;
             }
 
             // finde Vater
-            dummyZeit = gen.generateSchedule(pop[vPos])[instance.n() - 1];
+            if (!cacheMakespans) {
+                dummyZeit = gen.generateSchedule(pop[vPos])[instance.n() - 1];
+            } else {
+                dummyZeit = makespans[vPos];
+            }
+
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
                 besterVater = dummyZeit;
