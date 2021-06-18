@@ -173,7 +173,6 @@ public class GeneticAlgorithm {
             }
             gefunden = false;
         }
-        System.out.println("Jippie, One-Point!");
         return kind;
     }
 
