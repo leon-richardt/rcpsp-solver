@@ -34,6 +34,11 @@ public class GeneticAlgorithm {
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
         final double mutationswkeit = Config.instance().mutationProbability;
 
+        boolean onePointCrossover = false;
+        if (Config.instance().crossover == Config.Crossover.ONE_POINT) {
+            onePointCrossover = true;
+        }
+
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
 
@@ -58,7 +63,7 @@ public class GeneticAlgorithm {
         while (System.nanoTime() - startTime < timeout) {
             anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit);
+            zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit, onePointCrossover);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
@@ -95,7 +100,7 @@ public class GeneticAlgorithm {
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
     public static int[] reproduktion(int[][] pop, Instance instance, Random random,
-                                     EarliestStartScheduleGenerator gen, double mutationswkeit) {
+                                     EarliestStartScheduleGenerator gen, double mutationswkeit, boolean onePointCrossover) {
 
         int[] kind = new int[instance.n()];
         int[] mutter = new int[instance.n()];
@@ -125,14 +130,84 @@ public class GeneticAlgorithm {
         }
 
         // ONS Mutter und Vater
-        System.arraycopy(crossover(mutter, vater, random), 0, kind, 0, instance.n());
+        if (onePointCrossover) {
+            System.arraycopy(crossover(mutter, vater, random), 0, kind, 0, instance.n());
+        } else {
+            System.arraycopy(tpcrossover(mutter, vater, random), 0, kind, 0, instance.n());
+        }
 
         // bestimme zufällig, ob gerade (in dieser Iteration) mutiert werden soll
         if(random.nextDouble() <= mutationswkeit){
             System.arraycopy(mutation(kind, random, instance),0, kind, 0, instance.n());
         }
+
         return kind;
     }
+
+    /**
+     * Führt den Two-Point-Crossover durch
+     * @param mutter Elternteil Nr.1
+     * @param vater Elternteil Nr. 2
+     * @param random Ein Zufallsgenerator
+     * @return Eine Reihenfolge, die weiterhin vorrangsbeziehungsverträglich ist
+     */
+    public static int[] tpcrossover(int[] mutter, int[] vater, Random random){
+        int[] kind = new int[mutter.length];
+        int point;
+        int point2;
+        int grenze1 = random.nextInt((mutter.length));
+        int grenze2 = random.nextInt((mutter.length));
+        if(grenze1 <= grenze2){
+            point = grenze1;
+            point2 = grenze2;
+        } else{
+            point = grenze2;
+            point2 = grenze1;
+        }
+        int grenze = point;
+        boolean gefunden = false;
+
+        // fülle Kind bis zur 1. gewünschten Position mit Einträgen der Mutter
+        System.arraycopy(mutter, 0, kind, 0, point);
+        // fülle Kind ab der 2. gewünschten Position bis zum Ende mit Einträgen der Mutter
+        System.arraycopy(mutter, point2, kind, point2, mutter.length-point2);
+
+        // gehe durch Vater und schaue in jedem Eintrag, ob er schon durch die Mutter im Kind enthalten ist
+        for (int i : vater) {
+            for (int j = 0; j < grenze; j++) {
+                // wenn betrachteter Eintrag schon in Kind enthalten, muss dieser nicht weiter betrachtet werden
+                if (i == kind[j]) {
+                    gefunden = true;
+                    break;
+                }
+            }
+            // Falls es schon im ersten Teil gefunden wurde, muss im zweiten nicht mehr danach gesucht werden
+            if (!gefunden) {
+                for (int j = point2; j < kind.length; j++) {
+                    // wenn betrachteter Eintrag schon in Kind enthalten, muss dieser nicht weiter betrachtet werden
+                    if (i == kind[j]) {
+                        gefunden = true;
+                        break;
+                    }
+                }
+            }
+            // wenn betrachteter Eintrag noch nicht in Kind enthalten, füge diesen an passender Stelle zu Kind hinzu
+            if (!gefunden) {
+                kind[point] = i;
+                //wenn wir noch nicht am Ende des Kindes sind, inkrementieren wir point
+                if (point != kind.length - 1) {
+                    point++;
+                    //wenn wir dann schon die letzte Stelle im Kind gefüllt haben, gehen wir aus der Schleife raus
+                } else {
+                    break;
+                }
+            }
+            gefunden = false;
+        }
+        return kind;
+    }
+
+
 
     /**
      * Führt den One-Point-Crossover durch
