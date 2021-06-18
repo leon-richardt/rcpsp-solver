@@ -33,7 +33,6 @@ public class GeneticAlgorithm {
 
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
         final double mutationswkeit = Config.instance().mutationProbability;
-        System.out.println("Mutationswkeit: " + mutationswkeit);
 
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
