@@ -33,12 +33,15 @@ public class GeneticAlgorithm {
         HashMap<Integer,HashSet<Integer>> mypredecessors = Utils.buildPredecessorMap(instance);
         // Only for debug purposes
         var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
+        int[] makespans = new int[popsize]; // makespans ist mit 0en gefüllt, wenn wir es nicht benutzen, sonst wird es initialisiert
 
-        // Only for debug purposes
-        var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
+        boolean makeSpans = false;
+        if(Config.instance().cacheMakespans){
+            makeSpans = true;
+        }
 
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
-        final double mutationswkeit = 0.4;
+        final double mutationswkeit = Config.instance().mutationProbability;
 
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random,mypredecessors));
@@ -52,7 +55,9 @@ public class GeneticAlgorithm {
             aktuell = pop[i];
             schedule = essGen.generateSchedule(aktuell);
             dauer = schedule[schedule.length-1];
-
+            if(makeSpans) {
+                makespans[i] = dauer;
+            }
             if (dauer < optimum[optimum.length - 1]) {
                 final long updateTime = System.nanoTime();
                 updateDeltas.put(updateTime - startTime, dauer);
@@ -60,53 +65,48 @@ public class GeneticAlgorithm {
             }
         }
         int timesWithoutUpdate = 0;
-        int counterTimesWithoutImprovement =0;
         while (System.nanoTime() - startTime < timeout) {
-        anzahl_iterationen++;
+            anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit);
+            zuwachs = reproduktion(popsize, pop, instance, random, essGen, mutationswkeit, makeSpans, makespans);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
-            dauer = schedule[schedule.length-1];
-            if (dauer < optimum[optimum.length-1]){
+            dauer = schedule[schedule.length - 1];
+            if (dauer < optimum[optimum.length - 1]) {
                 timesWithoutUpdate = 0;
                 final long updateTime = System.nanoTime();
                 updateDeltas.put(updateTime - startTime, dauer);
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
-
-            if (timesWithoutUpdate > 10){
-                counterTimesWithoutImprovement++;
-                // after 10 times without finding a better value
-                // exchange the member the the highest fitness value
-                // against a new random member
-                int maximum_index= 0;
-                int maximum_value = -1;
-                //find member with highest fitness value
-                //for (int i= 0; i< popsize; i++){
-                //    if (fitness_pop[i]> maximum_value){
-                //        maximum_index =i;
-                //    }
-                //}
-                //exchange new generated member with member with maximum makespan
-                System.arraycopy(GeneratePop.generateOne(instance,random,mypredecessors),0,pop[maximum_index],0,instance.n());
-                //update fitness array
-                //fitness_pop[maximum_index] = essGen.generateSchedule(pop[maximum_index])[instance.n()-1];
-                timesWithoutUpdate =0;
-            }
-
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
             sterbeplatz = random.nextInt(popsize);
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
-            //fitness_pop[sterbeplatz] = dauer;
-            timesWithoutUpdate++;
-        }
-        System.err.println("Times without Update " + counterTimesWithoutImprovement);
-        for (var entry : updateDeltas.entrySet()) {
-            System.out.println(entry.getKey() + " " + entry.getValue());
-        }
+            if (makeSpans) {
+                makespans[sterbeplatz] = dauer;
+            }
 
+            timesWithoutUpdate++;
+
+            if (timesWithoutUpdate > Config.instance().noImprovementThreshold) {
+                // after 10 times without finding a better value
+                // exchange the member the the highest fitness value
+                // against a new random member
+                int maximum_index = 0;
+                int maximum_value = -1;
+                //find member with highest fitness value
+                for (int i = 0; i < popsize; i++) {
+                    if (makespans[i] > maximum_value) {
+                        maximum_index = i;
+                    }
+                }
+                //exchange new generated member with member with maximum makespan
+                System.arraycopy(GeneratePop.generateOne(instance, random, mypredecessors), 0, pop[maximum_index], 0, instance.n());
+                //update fitness array
+                makespans[maximum_index] = essGen.generateSchedule(pop[maximum_index])[instance.n() - 1];
+                timesWithoutUpdate = 0;
+            }
+        }
         if (Config.instance().shouldLog) {
             for (var entry : updateDeltas.entrySet()) {
                 System.out.println("time: " + entry.getKey() + " " + entry.getValue());
@@ -127,8 +127,8 @@ public class GeneticAlgorithm {
      * @param mutationswkeit nur mit einer gewissen Wkeit wird mutiert
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
-    public static int[] reproduktion(int[][] pop, Instance instance, Random random,
-                                     EarliestStartScheduleGenerator gen, double mutationswkeit) {
+    public static int[] reproduktion(int popsize, int[][] pop, Instance instance, Random random,
+                                     EarliestStartScheduleGenerator gen, double mutationswkeit, boolean makeSpans, int[] makespans) {
 
         int[] kind = new int[instance.n()];
         int[] mutter = new int[instance.n()];
@@ -143,14 +143,23 @@ public class GeneticAlgorithm {
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            dummyZeit = gen.generateSchedule(pop[mPos])[instance.n() - 1];
+            if(!makeSpans){
+                dummyZeit = gen.generateSchedule(pop[mPos])[instance.n() - 1];
+            } else{
+                dummyZeit = makespans[mPos];
+            }
+
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
                 besteMutter = dummyZeit;
             }
 
             // finde Vater
+            if(!makeSpans){
             dummyZeit = gen.generateSchedule(pop[vPos])[instance.n() - 1];
+            }else{
+                dummyZeit = makespans[vPos];
+            }
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
                 besterVater = dummyZeit;
@@ -183,23 +192,23 @@ public class GeneticAlgorithm {
         // fülle Kind bis zur gewünschten Position mit Einträgen der Mutter
         System.arraycopy(mutter, 0, kind, 0, point);
         // gehe durch Vater und schaue in jedem Eintrag, ob er schon durch die Mutter im Kind enthalten ist
-        for (int k = 0; k < vater.length; k++) {
+        for (int i : vater) {
             for (int j = 0; j < grenze; j++) {
                 // wenn betrachteter Eintrag schon in Kind enthalten, muss dieser nicht weiter betrachtet werden
-                if (vater[k] == kind[j]) {
+                if (i == kind[j]) {
                     gefunden = true;
                     break;
                 }
             }
             // wenn betrachteter Eintrag noch nicht in Kind enthalten, füge diesen an passender Stelle zu Kind hinzu
             if (!gefunden) {
-                kind[point] = vater[k];
+                kind[point] = i;
                 //wenn wir noch nicht am Ende des Kindes sind, inkrementieren wir point
-                if(point != kind.length - 1){
+                if (point != kind.length - 1) {
                     point++;
                     //wenn wir dann schon die letzte Stelle im Kind gefüllt haben,
                     //gehen wir aus der Schleife raus
-                } else{
+                } else {
                     break;
                 }
             }
