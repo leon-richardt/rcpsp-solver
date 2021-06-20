@@ -34,6 +34,9 @@ public class GeneticAlgorithm {
         // Only for debug purposes
         var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
 
+        // Only for debug purposes
+        var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
+
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
         final double mutationswkeit = 0.4;
 
@@ -101,6 +104,10 @@ public class GeneticAlgorithm {
             timesWithoutUpdate++;
         }
         System.err.println("Times without Update " + counterTimesWithoutImprovement);
+        for (var entry : updateDeltas.entrySet()) {
+            System.out.println(entry.getKey() + " " + entry.getValue());
+        }
+
         for (var entry : updateDeltas.entrySet()) {
             System.out.println(entry.getKey() + " " + entry.getValue());
         }
