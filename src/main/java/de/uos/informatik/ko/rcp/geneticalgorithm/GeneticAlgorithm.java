@@ -1,5 +1,6 @@
 package de.uos.informatik.ko.rcp.geneticalgorithm;
 
+import de.uos.informatik.ko.rcp.Config;
 import de.uos.informatik.ko.rcp.Instance;
 import de.uos.informatik.ko.rcp.Utils;
 import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
@@ -21,8 +22,7 @@ public class GeneticAlgorithm {
         optimum[optimum.length - 1] = Integer.MAX_VALUE;
         // In der Population gespeichert sind Reihenfolgen (in der zweiten Dimension)
         int[][] pop = new int[popsize][instance.n()];
-        //aktuelle fitnesswerte der population
-        int[] fitness_pop= new int[popsize];
+        int anzahl_iterationen =0;
         int[] zuwachs = new int[instance.n()];
         int[] schedule = new int[instance.n()];
         int[] aktuell = new int[instance.n()];
@@ -52,7 +52,6 @@ public class GeneticAlgorithm {
             aktuell = pop[i];
             schedule = essGen.generateSchedule(aktuell);
             dauer = schedule[schedule.length-1];
-            fitness_pop[i]= dauer;
 
             if (dauer < optimum[optimum.length - 1]) {
                 final long updateTime = System.nanoTime();
@@ -63,7 +62,7 @@ public class GeneticAlgorithm {
         int timesWithoutUpdate = 0;
         int counterTimesWithoutImprovement =0;
         while (System.nanoTime() - startTime < timeout) {
-
+        anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
             zuwachs = reproduktion(pop, instance, random, essGen, mutationswkeit);
 
@@ -84,23 +83,23 @@ public class GeneticAlgorithm {
                 // against a new random member
                 int maximum_index= 0;
                 int maximum_value = -1;
-                //find memember with highest fitness value
-                for (int i= 0; i< popsize; i++){
-                    if (fitness_pop[i]> maximum_value){
-                        maximum_index =i;
-                    }
-                }
+                //find member with highest fitness value
+                //for (int i= 0; i< popsize; i++){
+                //    if (fitness_pop[i]> maximum_value){
+                //        maximum_index =i;
+                //    }
+                //}
                 //exchange new generated member with member with maximum makespan
                 System.arraycopy(GeneratePop.generateOne(instance,random,mypredecessors),0,pop[maximum_index],0,instance.n());
                 //update fitness array
-                fitness_pop[maximum_index] = essGen.generateSchedule(pop[maximum_index])[instance.n()-1];
+                //fitness_pop[maximum_index] = essGen.generateSchedule(pop[maximum_index])[instance.n()-1];
                 timesWithoutUpdate =0;
             }
 
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
             sterbeplatz = random.nextInt(popsize);
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
-            fitness_pop[sterbeplatz] = dauer;
+            //fitness_pop[sterbeplatz] = dauer;
             timesWithoutUpdate++;
         }
         System.err.println("Times without Update " + counterTimesWithoutImprovement);
@@ -108,8 +107,12 @@ public class GeneticAlgorithm {
             System.out.println(entry.getKey() + " " + entry.getValue());
         }
 
-        for (var entry : updateDeltas.entrySet()) {
-            System.out.println(entry.getKey() + " " + entry.getValue());
+        if (Config.instance().shouldLog) {
+            for (var entry : updateDeltas.entrySet()) {
+                System.out.println("time: " + entry.getKey() + " " + entry.getValue());
+            }
+
+            System.out.println("iterations: " + anzahl_iterationen);
         }
 
         return optimum;

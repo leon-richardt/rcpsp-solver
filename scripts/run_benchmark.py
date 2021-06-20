@@ -1,6 +1,7 @@
 import argparse
 import json
 import subprocess
+import re
 
 from string import Template
 from pathlib import Path
@@ -41,13 +42,18 @@ if __name__ == "__main__":
 
         run_obj = {"seed": i}
         run_obj["updates"] = []
-
+        # check for prefixes
         for line in update_lines:
-            time_delta, makespan = line.split()
-            run_obj["updates"].append({
+            if re.match("time: ", line):
+                newEntry = re.sub("time: ", "", line)
+                time_delta, makespan = newEntry.split()
+                run_obj["updates"].append({
                 "time_delta": int(time_delta),
                 "makespan": int(makespan)
-            })
+                })
+            if re.match("iterations: ", line):
+                newEntry = re.sub("iterations: ", "", line)
+                run_obj["iterations"] = int(newEntry)
 
         result_obj["runs"].append(run_obj)
         print("done.")
