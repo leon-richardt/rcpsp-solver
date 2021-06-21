@@ -36,6 +36,11 @@ public class GeneticAlgorithm {
 
         final boolean cacheMakespans = Config.instance().cacheMakespans;
 
+        boolean fixedTournamentSize = false;
+        if (Config.instance().parentSelection == Config.ParentSelection.FIXED_SIZE) {
+            fixedTournamentSize = true;
+        }
+
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
         final double mutationswkeit = Config.instance().mutationProbability;
 
@@ -70,7 +75,7 @@ public class GeneticAlgorithm {
         while (System.nanoTime() - startTime < timeout) {
             anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(popsize, pop, instance, random, essGen, mutationswkeit, onePointCrossover, cacheMakespans, makespans);
+            zuwachs = reproduktion(popsize, pop, instance, random, essGen, mutationswkeit, onePointCrossover, cacheMakespans, makespans, fixedTournamentSize);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
@@ -109,16 +114,24 @@ public class GeneticAlgorithm {
      * @param mutationswkeit nur mit einer gewissen Wkeit wird mutiert
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
-    public static int[] reproduktion(int popsize, int[][] pop, Instance instance, Random random, EarliestStartScheduleGenerator gen, double mutationswkeit, boolean onePointCrossover, boolean cacheMakespans, int[] makespans) {
+    public static int[] reproduktion(int popsize, int[][] pop, Instance instance, Random random, EarliestStartScheduleGenerator gen, double mutationswkeit, boolean onePointCrossover, boolean cacheMakespans, int[] makespans, boolean fixedTournamentSize) {
         int[] kind = new int[instance.n()];
         int[] mutter = new int[instance.n()];
         int[] vater = new int[instance.n()];
         int besteMutter = Integer.MAX_VALUE;
         int besterVater = Integer.MAX_VALUE;
         int dummyZeit = 0;
+        int groesse = 0;
+
+        if (fixedTournamentSize) {
+            groesse = 2;
+        } else {
+            groesse = random.nextInt(popsize) + 1;
+        }
+
 
         // suche unter (zwei mal) drei zufällig ausgewählten Reihenfolgen aus der Population die beste(n)
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < groesse; i++) {
             int mPos = random.nextInt(pop.length);
             int vPos = random.nextInt(pop.length);
 
