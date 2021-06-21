@@ -2,8 +2,11 @@ package de.uos.informatik.ko.rcp.geneticalgorithm;
 
 import de.uos.informatik.ko.rcp.Config;
 import de.uos.informatik.ko.rcp.Instance;
+import de.uos.informatik.ko.rcp.Utils;
 import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.LinkedHashMap;
 
@@ -29,6 +32,9 @@ public class GeneticAlgorithm {
         int sterbeplatz = -1;
         EarliestStartScheduleGenerator essGen = new EarliestStartScheduleGenerator(instance);
 
+        // build PredecessorMap just once so the generatePop und generateOne could use it
+        HashMap<Integer,HashSet<Integer>> mypredecessors = Utils.buildPredecessorMap(instance);
+
         // Only for debug purposes
         var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
 
@@ -50,7 +56,7 @@ public class GeneticAlgorithm {
         }
 
         // Population erstellen
-        pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random));
+        pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random, mypredecessors));
 
         final long timeout = 1_000_000_000L * (timeLimit - 1);  // in nanoseconds + one second buffer
         final long startTime = System.nanoTime();
@@ -72,6 +78,9 @@ public class GeneticAlgorithm {
         }
         anzahl_iterationen++;
 
+        final int noImprovementThreshold = Config.instance().noImprovementThreshold;
+        int timesWithoutUpdate = 0;
+
         while (System.nanoTime() - startTime < timeout) {
             anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
@@ -81,6 +90,7 @@ public class GeneticAlgorithm {
             schedule = essGen.generateSchedule(zuwachs);
             dauer = schedule[schedule.length-1];
             if (dauer < optimum[optimum.length-1]){
+                timesWithoutUpdate = 0;
                 final long updateTime = System.nanoTime();
                 updateDeltas.put(updateTime - startTime, dauer);
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
@@ -91,6 +101,27 @@ public class GeneticAlgorithm {
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
             if (cacheMakespans) {
                 makespans[sterbeplatz] = dauer;
+            }
+
+            timesWithoutUpdate += 1;
+
+            if (noImprovementThreshold != 0 && timesWithoutUpdate > noImprovementThreshold) {
+                // after X times without finding a better value
+                // exchange the member the the highest fitness value
+                // against a new random member
+                int maximum_index = 0;
+                int maximum_value = -1;
+                //find member with highest fitness value
+                for (int i = 0; i < popsize; i++) {
+                    if (makespans[i] > maximum_value) {
+                        maximum_index = i;
+                    }
+                }
+                //exchange new generated member with member with maximum makespan
+                System.arraycopy(GeneratePop.generateOne(instance, random, mypredecessors), 0, pop[maximum_index], 0, instance.n());
+                //update fitness array
+                makespans[maximum_index] = essGen.generateSchedule(pop[maximum_index])[instance.n() - 1];
+                timesWithoutUpdate = 0;
             }
         }
 
