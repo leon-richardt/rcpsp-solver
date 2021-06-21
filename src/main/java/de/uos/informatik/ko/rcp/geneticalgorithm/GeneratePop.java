@@ -11,11 +11,9 @@ public class GeneratePop {
 
     private GeneratePop() {}
     //change to Hashset of ArrayLists
-    public static HashSet<ArrayList<Integer>> generatePop(Instance instance, Integer pop_size,Random myGenerator){
+    public static HashSet<ArrayList<Integer>> generatePop(Instance instance, Integer pop_size, Random myGenerator, HashMap<Integer, HashSet<Integer>> predecessors){
         // all activities without predecessor are possible candidates
         HashSet<ArrayList<Integer>> results = new HashSet<ArrayList<Integer>>();
-        // the predecessor Map
-        HashMap<Integer,HashSet<Integer>> mypredecessors = Utils.buildPredecessorMap(instance);
         // the predecessor Map for the current iteration, changes are made to this map
         // new for every iteration
         HashMap<Integer,HashSet<Integer>> currentpredecessors;
@@ -28,7 +26,7 @@ public class GeneratePop {
         //continues member generation until the pop-size*numretries iterarion is reached, or
         //pop_size unique members are generated
         for (int i=0; i< pop_size*numretries; i++) {
-            currentpredecessors = copyHashMap(mypredecessors);
+            currentpredecessors = copyHashMap(predecessors);
             for (Map.Entry<Integer, HashSet<Integer>> entry : currentpredecessors.entrySet()) {
                 if (entry.getValue().isEmpty() && (!(scheduled.contains(entry.getKey())))) {
                     candidates.add(entry.getKey());
