@@ -5,10 +5,10 @@ import de.uos.informatik.ko.rcp.Instance;
 import de.uos.informatik.ko.rcp.Utils;
 import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
 
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
-import java.util.LinkedHashMap;
 
 /**
  * @author Manedikte
@@ -35,8 +35,8 @@ public class GeneticAlgorithm {
         // build PredecessorMap just once so the generatePop und generateOne could use it
         HashMap<Integer,HashSet<Integer>> mypredecessors = Utils.buildPredecessorMap(instance);
 
-        // Only for debug purposes
-        var updateDeltas = new LinkedHashMap<Long, Integer>(); // <update delta, new makespan>
+        // Holds updates to the makespan
+        var updateDeltas = new ArrayDeque<LogEntry>();
 
         int[] makespans = new int[popsize]; // makespans ist mit 0en gefüllt, wenn wir es nicht benutzen, sonst wird es initialisiert
 
@@ -72,7 +72,7 @@ public class GeneticAlgorithm {
             }
             if (dauer < optimum[optimum.length - 1]) {
                 final long updateTime = System.nanoTime();
-                updateDeltas.put(updateTime - startTime, dauer);
+                updateDeltas.add(new LogEntry(updateTime - startTime, anzahl_iterationen, dauer));
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
         }
@@ -92,7 +92,7 @@ public class GeneticAlgorithm {
             if (dauer < optimum[optimum.length-1]){
                 timesWithoutUpdate = 0;
                 final long updateTime = System.nanoTime();
-                updateDeltas.put(updateTime - startTime, dauer);
+                updateDeltas.add(new LogEntry(updateTime - startTime, anzahl_iterationen, dauer));
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
 
@@ -126,8 +126,8 @@ public class GeneticAlgorithm {
         }
 
         if (Config.instance().shouldLog) {
-            for (var entry : updateDeltas.entrySet()) {
-                System.out.println("time: " + entry.getKey() + " " + entry.getValue());
+            for (var entry : updateDeltas) {
+                System.out.println("delta: " + entry.timestamp + " " + entry.iteration + " " + entry.makespan);
             }
 
             System.out.println("iterations: " + anzahl_iterationen);
@@ -360,5 +360,17 @@ public class GeneticAlgorithm {
         kind[pos-1]=dummy;
 
         return kind;
+    }
+
+    private static class LogEntry {
+        public LogEntry(long timestamp, long iteration, int makespan) {
+            this.timestamp = timestamp;
+            this.iteration = iteration;
+            this.makespan = makespan;
+        }
+
+        final public long timestamp;
+        final public long iteration;
+        final public int makespan;
     }
 }

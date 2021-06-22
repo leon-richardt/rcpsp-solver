@@ -22,7 +22,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     cmd_template = Template("java -jar target/rcp-solver-0.1.0.jar $instance "
-                            "sol.txt $limit $seed")
+                            "sol.txt $limit $seed --should-log=true")
 
     instance_path = Path(args.instance)
 
@@ -42,18 +42,21 @@ if __name__ == "__main__":
 
         run_obj = {"seed": i}
         run_obj["updates"] = []
+
         # check for prefixes
         for line in update_lines:
-            if re.match("time: ", line):
-                newEntry = re.sub("time: ", "", line)
-                time_delta, makespan = newEntry.split()
+            if line.startswith("delta: "):
+                _, time_delta, iteration, makespan = line.split()
+
                 run_obj["updates"].append({
-                "time_delta": int(time_delta),
-                "makespan": int(makespan)
+                    "time_delta": int(time_delta),
+                    "iteration": int(iteration),
+                    "makespan": int(makespan)
                 })
-            if re.match("iterations: ", line):
-                newEntry = re.sub("iterations: ", "", line)
-                run_obj["iterations"] = int(newEntry)
+
+            elif line.startswith("iterations: "):
+                _, iterations = line.split()
+                run_obj["iterations"] = int(iterations)
 
         result_obj["runs"].append(run_obj)
         print("done.")
