@@ -37,6 +37,7 @@ public class GeneticAlgorithm {
 
         // Holds updates to the makespan
         var updateDeltas = new ArrayDeque<LogEntry>();
+        var memberIntroductionDeltas = new ArrayDeque<LogEntry>();
 
         int[] makespans = new int[popsize]; // makespans ist mit 0en gefüllt, wenn wir es nicht benutzen, sonst wird es initialisiert
 
@@ -90,8 +91,8 @@ public class GeneticAlgorithm {
             schedule = essGen.generateSchedule(zuwachs);
             dauer = schedule[schedule.length-1];
             if (dauer < optimum[optimum.length-1]){
-                timesWithoutUpdate = 0;
                 final long updateTime = System.nanoTime();
+                timesWithoutUpdate = 0;
                 updateDeltas.add(new LogEntry(updateTime - startTime, anzahl_iterationen, dauer));
                 System.arraycopy(schedule, 0, optimum, 0, optimum.length);
             }
@@ -106,6 +107,11 @@ public class GeneticAlgorithm {
             timesWithoutUpdate += 1;
 
             if (noImprovementThreshold != 0 && timesWithoutUpdate > noImprovementThreshold) {
+                final long updateTime = System.nanoTime();
+                // (leon): I'm being a cheap bastard here and abusing the LogEntry class because I'm too
+                // lazy to add yet another PODO for these kind of log entries.
+                memberIntroductionDeltas.add(new LogEntry(updateTime - startTime, anzahl_iterationen, -1));
+
                 // after X times without finding a better value
                 // exchange the member the the highest fitness value
                 // against a new random member
@@ -128,6 +134,10 @@ public class GeneticAlgorithm {
         if (Config.instance().shouldLog) {
             for (var entry : updateDeltas) {
                 System.out.println("delta: " + entry.timestamp + " " + entry.iteration + " " + entry.makespan);
+            }
+
+            for (var entry : memberIntroductionDeltas) {
+                System.out.println("member: " + entry.timestamp + " " + entry.iteration);
             }
 
             System.out.println("iterations: " + anzahl_iterationen);
