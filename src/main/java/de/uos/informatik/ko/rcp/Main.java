@@ -43,6 +43,12 @@ public class Main {
 
         System.out.println("Makespan: " + makespan);
 
+        final var isAdmissible = Utils.checkAdmissibility(instance, solution);
+        if (!isAdmissible) {
+            System.err.println("Solution is not admissible!");
+            System.exit(2);
+        }
+
         Io.writeSolution(solution, args.solutionPath);
     }
 
