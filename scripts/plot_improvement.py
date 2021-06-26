@@ -18,7 +18,7 @@ def mean_makespan(bench_obj):
         makespans = []
         for run in runs:
             val_at_x = np.nan
-            for update in run["updates"]:
+            for update in run["makespan_updates"]:
                 if update["time_delta"] > x_in_ns:
                     break
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         y = []
         iterations.append(run["iterations"])
 
-        for pair in run["updates"]:
+        for pair in run["makespan_updates"]:
             x.append(pair["time_delta"] / 1_000_000_000) # in s
             y.append(pair["makespan"])
 

@@ -15,3 +15,9 @@ The visualization script is run with:
 ```bash
 python scripts/plot_improvements.py <path to benchmark file>
 ```
+## Use script plotmakespan.py
+Use it like this:
+
+```bash
+python plotmakespan.py <folder with benchmarkfiles> <Name of Instance like "X58_3">
+```

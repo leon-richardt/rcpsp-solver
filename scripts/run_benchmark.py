@@ -1,7 +1,6 @@
 import argparse
 import json
 import subprocess
-import re
 
 from string import Template
 from pathlib import Path
@@ -22,7 +21,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     cmd_template = Template("java -jar target/rcp-solver-0.1.0.jar $instance "
-                            "sol.txt $limit $seed")
+                            "sol.txt $limit $seed --should-log=true")
 
     instance_path = Path(args.instance)
 
@@ -41,19 +40,31 @@ if __name__ == "__main__":
         update_lines = proc.stdout.splitlines()[:-1]
 
         run_obj = {"seed": i}
-        run_obj["updates"] = []
+        run_obj["makespan_updates"] = []
+        run_obj["member_updates"] = []
+
         # check for prefixes
         for line in update_lines:
-            if re.match("time: ", line):
-                newEntry = re.sub("time: ", "", line)
-                time_delta, makespan = newEntry.split()
-                run_obj["updates"].append({
-                "time_delta": int(time_delta),
-                "makespan": int(makespan)
+            if line.startswith("delta: "):
+                _, time_delta, iteration, makespan = line.split()
+
+                run_obj["makespan_updates"].append({
+                    "time_delta": int(time_delta),
+                    "iteration": int(iteration),
+                    "makespan": int(makespan)
                 })
-            if re.match("iterations: ", line):
-                newEntry = re.sub("iterations: ", "", line)
-                run_obj["iterations"] = int(newEntry)
+
+            elif line.startswith("member: "):
+                _, time_delta, iteration = line.split()
+
+                run_obj["member_updates"].append({
+                    "time_delta": int(time_delta),
+                    "iteration": int(iteration)
+                })
+
+            elif line.startswith("iterations: "):
+                _, iterations = line.split()
+                run_obj["iterations"] = int(iterations)
 
         result_obj["runs"].append(run_obj)
         print("done.")
