@@ -1,6 +1,5 @@
 package de.uos.informatik.ko.rcp.geneticalgorithm;
 
-import de.uos.informatik.ko.rcp.Config;
 import de.uos.informatik.ko.rcp.Instance;
 import de.uos.informatik.ko.rcp.Utils;
 import de.uos.informatik.ko.rcp.generators.EarliestStartScheduleGenerator;
@@ -41,20 +40,8 @@ public class GeneticAlgorithm {
 
         int[] makespans = new int[popsize]; // makespans ist mit 0en gefüllt, wenn wir es nicht benutzen, sonst wird es initialisiert
 
-        final boolean cacheMakespans = Config.instance().cacheMakespans;
-
-        boolean fixedTournamentSize = false;
-        if (Config.instance().parentSelection == Config.ParentSelection.FIXED_SIZE) {
-            fixedTournamentSize = true;
-        }
-
         // bestimme Wkeit (Wert zwischen 0 und 1) dass eine Mutation auftritt
-        final double mutationswkeit = Config.instance().mutationProbability;
-
-        boolean onePointCrossover = false;
-        if (Config.instance().crossover == Config.Crossover.ONE_POINT) {
-            onePointCrossover = true;
-        }
+        final double mutationswkeit = 0.75;
 
         // Population erstellen
         pop = GeneratePop.ReturnArray(GeneratePop.generatePop(instance, (Integer) popsize, random, mypredecessors));
@@ -68,9 +55,8 @@ public class GeneticAlgorithm {
             aktuell = pop[i];
             schedule = essGen.generateSchedule(aktuell);
             dauer = schedule[schedule.length-1];
-            if (cacheMakespans) {
-                makespans[i] = dauer;
-            }
+            makespans[i] = dauer;
+
             if (dauer < optimum[optimum.length - 1]) {
                 final long updateTime = System.nanoTime();
                 updateDeltas.add(new LogEntry(updateTime - startTime, anzahl_iterationen, dauer));
@@ -79,13 +65,13 @@ public class GeneticAlgorithm {
         }
         anzahl_iterationen++;
 
-        final int noImprovementThreshold = Config.instance().noImprovementThreshold;
+        final int noImprovementThreshold = 100;
         int timesWithoutUpdate = 0;
 
         while (System.nanoTime() - startTime < timeout) {
             anzahl_iterationen++;
             // Kinderzeugung inkl. turnierbasierter Elternauswahl, Crossover und Mutation
-            zuwachs = reproduktion(popsize, pop, instance, random, essGen, mutationswkeit, onePointCrossover, cacheMakespans, makespans, fixedTournamentSize);
+            zuwachs = reproduktion(popsize, pop, instance, random, essGen, mutationswkeit, makespans);
 
             // aktualisiere Optimum, falls nötig
             schedule = essGen.generateSchedule(zuwachs);
@@ -100,9 +86,7 @@ public class GeneticAlgorithm {
             // Füge das neu erzeugte Kind der Population hinzu (an einer zufälligen Stelle)
             sterbeplatz = random.nextInt(popsize);
             System.arraycopy(zuwachs, 0, pop[sterbeplatz], 0, zuwachs.length);
-            if (cacheMakespans) {
-                makespans[sterbeplatz] = dauer;
-            }
+            makespans[sterbeplatz] = dauer;
 
             timesWithoutUpdate += 1;
 
@@ -131,17 +115,15 @@ public class GeneticAlgorithm {
             }
         }
 
-        if (Config.instance().shouldLog) {
-            for (var entry : updateDeltas) {
-                System.out.println("delta: " + entry.timestamp + " " + entry.iteration + " " + entry.makespan);
-            }
-
-            for (var entry : memberIntroductionDeltas) {
-                System.out.println("member: " + entry.timestamp + " " + entry.iteration);
-            }
-
-            System.out.println("iterations: " + anzahl_iterationen);
+        for (var entry : updateDeltas) {
+            System.out.println("delta: " + entry.timestamp + " " + entry.iteration + " " + entry.makespan);
         }
+
+        for (var entry : memberIntroductionDeltas) {
+            System.out.println("member: " + entry.timestamp + " " + entry.iteration);
+        }
+
+        System.out.println("iterations: " + anzahl_iterationen);
 
         return optimum;
     }
@@ -155,21 +137,14 @@ public class GeneticAlgorithm {
      * @param mutationswkeit nur mit einer gewissen Wkeit wird mutiert
      * @return ein Kind (Reihenfolge[])von zwei turnierbasiert ausgewählten Eltern
      */
-    public static int[] reproduktion(int popsize, int[][] pop, Instance instance, Random random, EarliestStartScheduleGenerator gen, double mutationswkeit, boolean onePointCrossover, boolean cacheMakespans, int[] makespans, boolean fixedTournamentSize) {
+    public static int[] reproduktion(int popsize, int[][] pop, Instance instance, Random random, EarliestStartScheduleGenerator gen, double mutationswkeit, int[] makespans) {
         int[] kind = new int[instance.n()];
         int[] mutter = new int[instance.n()];
         int[] vater = new int[instance.n()];
         int besteMutter = Integer.MAX_VALUE;
         int besterVater = Integer.MAX_VALUE;
         int dummyZeit = 0;
-        int groesse = 0;
-
-        if (fixedTournamentSize) {
-            groesse = 2;
-        } else {
-            groesse = random.nextInt(popsize) + 1;
-        }
-
+        final int groesse = 2;
 
         // suche unter (zwei mal) drei zufällig ausgewählten Reihenfolgen aus der Population die beste(n)
         for (int i = 0; i < groesse; i++) {
@@ -177,11 +152,7 @@ public class GeneticAlgorithm {
             int vPos = random.nextInt(pop.length);
 
             // finde Mutter
-            if (!cacheMakespans) {
-                dummyZeit = gen.generateSchedule(pop[mPos])[instance.n() - 1];
-            } else{
-                dummyZeit = makespans[mPos];
-            }
+            dummyZeit = makespans[mPos];
 
             if (dummyZeit < besteMutter) {
                 System.arraycopy(pop[mPos], 0, mutter, 0, instance.n());
@@ -189,11 +160,7 @@ public class GeneticAlgorithm {
             }
 
             // finde Vater
-            if (!cacheMakespans) {
-                dummyZeit = gen.generateSchedule(pop[vPos])[instance.n() - 1];
-            } else {
-                dummyZeit = makespans[vPos];
-            }
+            dummyZeit = makespans[vPos];
 
             if (dummyZeit < besterVater) {
                 System.arraycopy(pop[vPos], 0, vater, 0, instance.n());
@@ -202,11 +169,7 @@ public class GeneticAlgorithm {
         }
 
         // ONS Mutter und Vater
-        if (onePointCrossover) {
-            System.arraycopy(crossover(mutter, vater, random), 0, kind, 0, instance.n());
-        } else {
-            System.arraycopy(tpcrossover(mutter, vater, random), 0, kind, 0, instance.n());
-        }
+        System.arraycopy(tpcrossover(mutter, vater, random), 0, kind, 0, instance.n());
 
         // bestimme zufällig, ob gerade (in dieser Iteration) mutiert werden soll
         if(random.nextDouble() <= mutationswkeit){
